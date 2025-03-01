@@ -1,0 +1,8 @@
+- Build a web crawler that can find all images on the web page(s) that it crawls.
+- Avoid re-crawling any pages that have already been visited.
+- Crawl not only the given url, but other pages in the same domain
+- Make your crawler multithreaded to speed up response times
+- Be a friendly crawler and try not to hammer a site
+- Think about how to identify different classes of images and do they need special handling
+- Can you identify images as logos? Perhaps collect favicons?
+- Can you mark images that contain people?
