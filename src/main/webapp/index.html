@@ -55,8 +55,6 @@
 	</p>
 	<p>Please remember to think about good design and code style. Comments in your code are great, but thought should also be taken in how to name your variables and method.</p>
 
-
-
 	<div class="content">
 		<div class="input">
 			<form>
@@ -71,6 +69,18 @@
 		</div>
 	</div>
 	<script>
+		function isValidURL(url){
+			try{
+				new URL(url);
+				console.log("Valid url: "+url);
+				return true;
+			}
+			catch(e){
+				console.log("Invalid url: "+url);
+				return false;
+			}
+		}
+
 		var resultList = document.querySelector('ul.results');
 		var urlInput = document.querySelector('input[name=url]')
 
@@ -109,7 +119,12 @@
 
 		document.querySelector('button').addEventListener("click", function(event) {
 			event.preventDefault();
-			makeApiCall('/main?url=' + urlInput.value, 'POST', null, updateList);
+			if(isValidURL(urlInput.value)){
+				makeApiCall('/main?url=' + urlInput.value, 'POST', null, updateList);
+			}
+			else{
+				alert('Please enter a valid URL');
+			}
 		});
 	</script>
 </body>

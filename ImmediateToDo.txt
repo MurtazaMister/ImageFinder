@@ -1,0 +1,2 @@
+- Fix URL validation
+- All the elements in html that can have an image - img, picture
