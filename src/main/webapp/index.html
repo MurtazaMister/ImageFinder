@@ -58,16 +58,25 @@
 	<div class="content">
 		<div class="input">
 			<form>
-				<input type="text" name="url">
+				<label for="url">URL:</label>
+				<input type="text" name="url" id="url" required>
+
+				<label for="recursiveLevels">Recursive Levels:</label>
+				<input type="number" name="recursiveLevels" id="recursiveLevels" min="0" value="3" required>
+
+				<label for="recursive">Enable Recursive:</label>
+				<input type="checkbox" name="recursive" value="true" id="recursive">
+
+				<button type="button">Submit</button>
 			</form>
-			<button type="button">Submit!</button>
 		</div>
 		<div class="output">
 			<ul class="results">
-
+				<!-- Results will be displayed here -->
 			</ul>
 		</div>
 	</div>
+
 	<script>
 		function isValidURL(url){
 			try{
@@ -101,13 +110,14 @@
 		}
 
 		updateList = function(response) {
-			resultList.innerHTML = '';
-			for (var i = 0; i < response.length; i++) {
-				var img = document.createElement("img");
-				img.width = 200;
-				img.src = response[i];
-				resultList.appendChild(img);
-			}
+			// resultList.innerHTML = '';
+			console.log(response);
+			// for (var i = 0; i < response.length; i++) {
+			// 	var img = document.createElement("img");
+			// 	img.width = 200;
+			// 	img.src = response[i];
+			// 	resultList.appendChild(img);
+			// }
 		}
 
 		makeApiCall = function(url, method, obj, callback) {
@@ -119,10 +129,21 @@
 
 		document.querySelector('button').addEventListener("click", function(event) {
 			event.preventDefault();
-			if(isValidURL(urlInput.value)){
-				makeApiCall('/main?url=' + urlInput.value, 'POST', null, updateList);
-			}
-			else{
+
+			const urlInput = document.querySelector('input[name="url"]');
+			const recursiveCheckbox = document.querySelector('input[name="recursive"]');
+			const recursiveLevelsInput = document.querySelector('input[name="recursiveLevels"]');
+
+			const url = urlInput.value;
+			const recursive = recursiveCheckbox.checked;
+			const recursiveLevels = recursiveLevelsInput.value;
+
+			if (isValidURL(url)) {
+				// Construct the query string with URL and additional parameters
+				let urlWithParams = `/main?url=${url}&recursive=${recursive}&recursiveLevels=${recursiveLevels}`;
+
+				makeApiCall(urlWithParams, 'POST', null, updateList);
+			} else {
 				alert('Please enter a valid URL');
 			}
 		});
