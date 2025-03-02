@@ -8,6 +8,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.eulerity.hackathon.imagefinder.object.Image;
+import com.eulerity.hackathon.imagefinder.service.ImageCrawlerService;
+import com.eulerity.hackathon.imagefinder.util.UrlUtilities;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +22,8 @@ import org.jsoup.select.Elements;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 @WebServlet(
     name = "ImageFinder",
@@ -38,47 +43,35 @@ public class ImageFinder extends HttpServlet{
 			"https://images.pexels.com/photos/1108099/pexels-photo-1108099.jpeg?auto=compress&format=tiny"
   	};
 
-	private boolean isValidURL(String url) {
-		try{
-			new URL(url);
-			log.info("Valid URL: " + url);
-			return true;
-		}
-		catch (Exception e) {
-			log.error("Invalid URL: " + url);
-			return false;
-		}
-	}
-
 	@Override
 	protected final void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 		resp.setContentType("text/json");
 		String path = req.getServletPath();
+
 		String url = req.getParameter("url");
+		String recursive = req.getParameter("recursive");
+		String permissibleDepth = req.getParameter("permissibleDepth");
 
-        log.info("Got request of:{} with query param: {}", path, url);
-		if(isValidURL(url)) {
+		boolean isRecursive = recursive != null && recursive.equals("true");
+		int permissibleDepthInt;
+		try {
+			permissibleDepthInt = Integer.parseInt(permissibleDepth);
+		} catch (Exception e) {
+			permissibleDepthInt = 0;
+		}
 
-			Document document = Jsoup.connect(url).get();
-			Elements images = document.select("img[src]");
-			List<String> imageUrls = new ArrayList<>();
-			for(Element img : images) {
-				String imageUrl = img.attr("src");
-				if(imageUrl.startsWith("data")) continue;
+        log.info("Got request of:{} with query params\n- url: {}\n- recursive: {}\n permissibleDepth: {}", path, url, recursive, permissibleDepth);
 
-				if(imageUrl.startsWith("http")) {
-					log.info("URL: {}", imageUrl);
-					imageUrls.add(imageUrl);
-				}
-				else {
-					URL baseUrl = new URL(url.endsWith("/") ? url : url + "/");
-					URL finalUrl = new URL(baseUrl, imageUrl);
-					log.info("URL: {}", finalUrl);
-					imageUrls.add(finalUrl.toString());
-				}
+		if(UrlUtilities.isValidURL(url)) {
+			ImageCrawlerService imageCrawlerService;
+			if(isRecursive) {
+				imageCrawlerService = new ImageCrawlerService(true, permissibleDepthInt);
 			}
-			resp.getWriter().print(GSON.toJson(imageUrls));
-
+			else {
+				imageCrawlerService = new ImageCrawlerService(false);
+			}
+			ConcurrentMap<String, CopyOnWriteArrayList<Image>> map = imageCrawlerService.init(url);
+			resp.getWriter().print(GSON.toJson(map));
 		}
 		else{
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 Bad Request

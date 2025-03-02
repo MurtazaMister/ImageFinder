@@ -1,6 +1,5 @@
 - Build a web crawler that can find all images on the web page(s) that it crawls.
 - Make your crawler multithreaded to speed up response times
-- Be a friendly crawler and try not to hammer a site
 - Can you mark images that contain people?
 - Write test cases
 - Global error handling
@@ -12,3 +11,6 @@
 - There will be svg and gif files, mostly useless, filter them
 - Can you identify images as logos? Perhaps collect favicons?
 - Think about how to identify different classes of images and do they need special handling
+
+- Rate limiting - to prevent overwhelming a website
+- Be a friendly crawler and try not to hammer a site
