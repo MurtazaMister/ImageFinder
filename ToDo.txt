@@ -11,9 +11,9 @@
 - Can you identify images as logos? Perhaps collect favicons?
 - Think about how to identify different classes of images and do they need special handling
 
-- Rate limiting - to prevent overwhelming a website
-- Get the textbox red if the level specified is more than 2
+- DONE - Rate limiting - to prevent overwhelming a website
 - Be a friendly crawler and try not to hammer a site
+- Add options in the front end to specify rate limiting max delay
 
 - UI updates
     - Large view on hover

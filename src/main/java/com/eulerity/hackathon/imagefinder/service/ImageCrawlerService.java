@@ -4,6 +4,7 @@ import com.eulerity.hackathon.imagefinder.config.ConfigLoader;
 import com.eulerity.hackathon.imagefinder.object.Image;
 import com.eulerity.hackathon.imagefinder.util.UrlUtilities;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -25,9 +26,11 @@ public class ImageCrawlerService {
 
     // Rate limiting mechanism
     private final Object lock = new Object();
-    private volatile long adaptiveDelay = 100; // ms
     private static final int MAX_HISTORY_SIZE = 5;
     private final Queue<Long> responseTimes = new LinkedList<>();
+    private final long minDelay = ConfigLoader.get("crawler.rateLimit.delay.minimum", 500);
+    private final long maxDelay = ConfigLoader.get("crawler.rateLimit.delay.maximum", 5000);
+    private volatile long adaptiveDelay = minDelay; // ms
 
     // Concurrency mechanism
     private ExecutorService executorService = Executors.newFixedThreadPool(ConfigLoader.get("crawler.maxThreads", 8));
@@ -38,6 +41,10 @@ public class ImageCrawlerService {
     // Class parameters
     private boolean recursive;
     private int permissibleDepth;
+
+    // Feedback mechanism
+    private final AtomicInteger totalRequests = new AtomicInteger(0);
+    private final AtomicInteger failedRequests = new AtomicInteger(0);
 
     public ImageCrawlerService(boolean recursive) {
         this.recursive = recursive;
@@ -96,8 +103,9 @@ public class ImageCrawlerService {
             try {
                 long tempDelay = adaptiveDelay;
                 Thread.sleep(tempDelay);
-                log.info("After delay: {} | Crawling initiates for: {}, depth: {}", tempDelay, url, depth);
+                log.info("After delay: {}ms | Crawling initiates for: {}, depth: {}", tempDelay, url, depth);
 
+                totalRequests.incrementAndGet();
                 long startTime = System.currentTimeMillis();
                 Document document = Jsoup.connect(url)
                         .header("User-Agent", "Mozilla/5.0")
@@ -105,16 +113,16 @@ public class ImageCrawlerService {
                 long responseTime = System.currentTimeMillis() - startTime;
 
                 synchronized (lock) {
-                    long previousAverage = responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
+                    long previousAverage = (!responseTimes.isEmpty())?(responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size()):0;
                     if (responseTimes.size() >= MAX_HISTORY_SIZE) {
                         responseTimes.poll();
                     }
                     responseTimes.add(responseTime);
                     long currentAverage = responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
-                    double percentageChange = ((double) (currentAverage - previousAverage) / previousAverage );
+                    double percentageChange = (previousAverage != 0)?((double) (currentAverage - previousAverage) / previousAverage ):0;
 
-                    adaptiveDelay = (long) ((double)adaptiveDelay * (1.0 + percentageChange));
-                    adaptiveDelay = Math.max(50, Math.min(2500, adaptiveDelay));
+                    adaptiveDelay = (long) ((double)adaptiveDelay * (1.0 + ((percentageChange>0)?percentageChange*3:percentageChange)));
+                    adaptiveDelay = Math.max(minDelay, Math.min(maxDelay, adaptiveDelay));
                 }
 
                 if(recursive && depth < permissibleDepth){
@@ -124,12 +132,15 @@ public class ImageCrawlerService {
                     }
                 }
                 crawlImages(document, url);
-            } catch (Exception e) {
-                log.error("Failed to process: {}\nException: {}", url, e.getMessage());
+            } catch (HttpStatusException e) {
+                failedRequests.incrementAndGet();
+                log.error("Failed to process: {}\nStatus code: {}\nException: {}", url, e.getStatusCode(), e.getMessage());
                 // Exponential backoff on rejected requests
                 synchronized (lock) {
-                    adaptiveDelay = (long)Math.min(2500.0, (double)adaptiveDelay*1.25);
+                    adaptiveDelay = (long)Math.min(maxDelay, (double)adaptiveDelay*2);
                 }
+            } catch (Exception e) {
+                log.error("Failed to process: {}\nException: {}", url, e.getMessage());
             } finally {
                 if(activeTaskCounter.decrementAndGet() == 0){
                     synchronized (ImageCrawlerService.this) {
@@ -189,6 +200,11 @@ public class ImageCrawlerService {
      * Gracefully shuts down the executor service once all tasks are completed
      */
     public void executorShutdownService(){
+
+        log.info("Total requests made: {}", totalRequests.get());
+        log.info("Failed requests: {}", failedRequests.get());
+        log.info("Success percentage: {}%", Math.ceil((((double)totalRequests.get()-failedRequests.get())*100)/(double)totalRequests.get()));
+
         log.info("Executor service shut down initiated");
         executorService.shutdown();
         try {
