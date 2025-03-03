@@ -10,7 +10,9 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,12 +23,21 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ImageCrawlerService {
 
+    // Rate limiting mechanism
+    private final Object lock = new Object();
+    private volatile long adaptiveDelay = 100; // ms
+    private static final int MAX_HISTORY_SIZE = 5;
+    private final Queue<Long> responseTimes = new LinkedList<>();
+
+    // Concurrency mechanism
     private ExecutorService executorService = Executors.newFixedThreadPool(ConfigLoader.get("crawler.maxThreads", 8));
-    private boolean recursive;
-    private int permissibleDepth;
     // Object to store image objects for their respective webpage's URL
     private ConcurrentMap<String, CopyOnWriteArrayList<Image>> imageDb = new ConcurrentHashMap<>();
     private final AtomicInteger activeTaskCounter = new AtomicInteger(0);
+
+    // Class parameters
+    private boolean recursive;
+    private int permissibleDepth;
 
     public ImageCrawlerService(boolean recursive) {
         this.recursive = recursive;
@@ -83,10 +94,29 @@ public class ImageCrawlerService {
     public void crawl(String url, int depth){
         executorService.submit(() -> {
             try {
-                log.info("Crawling initiates for: {}, depth: {}", url, depth);
+                long tempDelay = adaptiveDelay;
+                Thread.sleep(tempDelay);
+                log.info("After delay: {} | Crawling initiates for: {}, depth: {}", tempDelay, url, depth);
+
+                long startTime = System.currentTimeMillis();
                 Document document = Jsoup.connect(url)
                         .header("User-Agent", "Mozilla/5.0")
                         .get();
+                long responseTime = System.currentTimeMillis() - startTime;
+
+                synchronized (lock) {
+                    long previousAverage = responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
+                    if (responseTimes.size() >= MAX_HISTORY_SIZE) {
+                        responseTimes.poll();
+                    }
+                    responseTimes.add(responseTime);
+                    long currentAverage = responseTimes.stream().mapToLong(Long::longValue).sum() / responseTimes.size();
+                    double percentageChange = ((double) (currentAverage - previousAverage) / previousAverage );
+
+                    adaptiveDelay = (long) ((double)adaptiveDelay * (1.0 + percentageChange));
+                    adaptiveDelay = Math.max(50, Math.min(2500, adaptiveDelay));
+                }
+
                 if(recursive && depth < permissibleDepth){
                     List<String> subPageUrlsList = getSubPageUrls(document, url);
                     for(String subPageUrl : subPageUrlsList){
@@ -96,6 +126,10 @@ public class ImageCrawlerService {
                 crawlImages(document, url);
             } catch (Exception e) {
                 log.error("Failed to process: {}\nException: {}", url, e.getMessage());
+                // Exponential backoff on rejected requests
+                synchronized (lock) {
+                    adaptiveDelay = (long)Math.min(2500.0, (double)adaptiveDelay*1.25);
+                }
             } finally {
                 if(activeTaskCounter.decrementAndGet() == 0){
                     synchronized (ImageCrawlerService.this) {
@@ -138,7 +172,7 @@ public class ImageCrawlerService {
 
         for(Element image : images){
             String imageUrl = image.attr("src");
-            if(imageUrl.startsWith("data")) continue;
+            if(imageUrl.startsWith("data") || imageUrl.contains("svg")) continue;
             try {
                 imageUrl = UrlUtilities.resolveUrl(baseUrl, imageUrl, false);
                 if(imageUrl != null) {

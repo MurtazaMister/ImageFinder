@@ -1,12 +1,11 @@
-- Build a web crawler that can find all images on the web page(s) that it crawls.
-- Make your crawler multithreaded to speed up response times
+- DONE - Build a web crawler that can find all images on the web page(s) that it crawls.
+- DONE - Make your crawler multithreaded to speed up response times
 - Can you mark images that contain people?
 - Write test cases
-- Global error handling
 
-- Avoid re-crawling any pages that have already been visited.
-- Crawl not only the given url, but other pages in the same domain
-- Add an option to crawl only the current page OR all the subpages
+- DONE - Avoid re-crawling any pages that have already been visited.
+- DONE - Crawl not only the given url, but other pages in the same domain
+- DONE - Add an option to crawl only the current page OR all the subpages
 
 - There will be svg and gif files, mostly useless, filter them
 - Can you identify images as logos? Perhaps collect favicons?
@@ -15,3 +14,7 @@
 - Rate limiting - to prevent overwhelming a website
 - Get the textbox red if the level specified is more than 2
 - Be a friendly crawler and try not to hammer a site
+
+- UI updates
+    - Large view on hover
+    - Options to increase-decrease size of images (small, medium large)
