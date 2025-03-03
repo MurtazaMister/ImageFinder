@@ -13,7 +13,7 @@ public class UrlUtilities {
 
     /**
      * To make URLs consistent among different scenarios
-     * @param url
+     * @param url URL to be normalized
      * @return Normalized URL of type {@code String}
      */
     public static String normalizeUrl(String url) {
@@ -24,7 +24,7 @@ public class UrlUtilities {
 
     /**
      * Checks if the given url is absolute or not
-     * @param url
+     * @param url URL
      * @return {@code true} if absolute URL is supplied, otherwise false
      */
     public static boolean isAbsoluteUrl(String url) {
@@ -38,7 +38,7 @@ public class UrlUtilities {
 
     /**
      * Checks whether the URL conforms to HTTP or HTTPS
-     * @param url
+     * @param url URL
      * @return {@code true} if yes, {@code false} otherwise
      */
     public static boolean isHttpOrHttps(String url) {
@@ -57,7 +57,7 @@ public class UrlUtilities {
      * @param currentUrl The url that is found
      * @param assertSameDomain To check if url belongs to the same domain
      * @return Fully formed {@code currentUrl} or {@code null} if not in the same domain
-     * @throws MalformedURLException
+     * @throws MalformedURLException Invalid URL Exception
      */
     public static String resolveUrl(String baseUrl, String currentUrl, boolean assertSameDomain) throws MalformedURLException {
 
@@ -95,7 +95,7 @@ public class UrlUtilities {
 
     /**
      * Validates if the format of the URL is correct or not
-     * @param url
+     * @param url URL
      * @return {@code boolean} {@code true} if url is in valid format, {@code false} otherwise
      */
     public static boolean isValidURL(String url) {

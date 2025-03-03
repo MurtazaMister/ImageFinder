@@ -40,7 +40,7 @@ public class ImageCrawlerService {
 
     /**
      * Entry point for ImageCrawlerService class
-     * @param url
+     * @param url URL of the webpage to be crawled
      * @return {@code ConcurrentMap<String, CopyOnWriteArrayList<Image>>} Map of {@code (url, List<Image>)}
      */
     public ConcurrentMap<String, CopyOnWriteArrayList<Image>> init(String url){
@@ -62,8 +62,8 @@ public class ImageCrawlerService {
 
     /**
      * Overloaded entry point for ImageCrawlerService class to introduce the depth parameter
-     * @param url
-     * @param depth
+     * @param url URL of the webpage to be crawled
+     * @param depth Current level of depth of this page
      */
     public void init(String url, int depth){
         if(depth > permissibleDepth) return;
@@ -77,8 +77,8 @@ public class ImageCrawlerService {
     /**
      * Crawls the current webpage for subpage URLs and images.<br>
      * Repeats the above step for subpages within the current page, until {@code depth} variable is not exhausted.
-     * @param url
-     * @param depth
+     * @param url URL of the page to be crawled
+     * @param depth Current level of depth of the webpage
      */
     public void crawl(String url, int depth){
         executorService.submit(() -> {
