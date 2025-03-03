@@ -5,8 +5,50 @@ import lombok.extern.slf4j.Slf4j;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+/**
+ * URL Utilities class provides quick utility functions for URLs
+ */
 @Slf4j
 public class UrlUtilities {
+
+    /**
+     * To make URLs consistent among different scenarios
+     * @param url
+     * @return Normalized URL of type {@code String}
+     */
+    public static String normalizeUrl(String url) {
+        if(url == null || url.isEmpty()) return null;
+        if(url.endsWith("/")) return url;
+        return url + "/";
+    }
+
+    /**
+     * Checks if the given url is absolute or not
+     * @param url
+     * @return {@code true} if absolute URL is supplied, otherwise false
+     */
+    public static boolean isAbsoluteUrl(String url) {
+        try {
+            new URL(url);
+            return true;
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Checks whether the URL conforms to HTTP or HTTPS
+     * @param url
+     * @return {@code true} if yes, {@code false} otherwise
+     */
+    public static boolean isHttpOrHttps(String url) {
+        try {
+            String protocol = new URL(url).getProtocol();
+            return protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("https");
+        } catch (MalformedURLException e) {
+            return false;
+        }
+    }
 
     /**
      * This method concatenates baseUrl and currentUrl if the currentUrl is relative, otherwise checks if they are in
@@ -18,12 +60,18 @@ public class UrlUtilities {
      * @throws MalformedURLException
      */
     public static String resolveUrl(String baseUrl, String currentUrl, boolean assertSameDomain) throws MalformedURLException {
-        if(currentUrl.startsWith("http")) {
-            if(assertSameDomain){
-                return (isSameDomain(baseUrl, currentUrl)) ? currentUrl : null;
+
+        if(isAbsoluteUrl(currentUrl)) {
+            if(isHttpOrHttps(currentUrl)) {
+                if(assertSameDomain){
+                    return (isSameDomain(baseUrl, currentUrl)) ? currentUrl : null;
+                }
+                else{
+                    return currentUrl;
+                }
             }
-            else{
-                return currentUrl;
+            else {
+                return null;
             }
         }
         else {

@@ -30,7 +30,7 @@ public class ImageCrawlerService {
 
     public ImageCrawlerService(boolean recursive) {
         this.recursive = recursive;
-        this.permissibleDepth = ConfigLoader.get("crawler.defaultDepth", 3);
+        this.permissibleDepth = ConfigLoader.get("crawler.defaultDepth", 0);
     }
 
     public ImageCrawlerService(boolean recursive, int permissibleDepth) {
@@ -46,6 +46,17 @@ public class ImageCrawlerService {
     public ConcurrentMap<String, CopyOnWriteArrayList<Image>> init(String url){
         log.info("Crawl initiate request for: {}", url);
         init(url, 0);
+
+        synchronized (this) {
+            while (activeTaskCounter.get() > 0) {
+                try {
+                    this.wait();
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+
         return imageDb;
     }
 
@@ -73,7 +84,9 @@ public class ImageCrawlerService {
         executorService.submit(() -> {
             try {
                 log.info("Crawling initiates for: {}, depth: {}", url, depth);
-                Document document = Jsoup.connect(url).get();
+                Document document = Jsoup.connect(url)
+                        .header("User-Agent", "Mozilla/5.0")
+                        .get();
                 if(recursive && depth < permissibleDepth){
                     List<String> subPageUrlsList = getSubPageUrls(document, url);
                     for(String subPageUrl : subPageUrlsList){
@@ -82,9 +95,12 @@ public class ImageCrawlerService {
                 }
                 crawlImages(document, url);
             } catch (Exception e) {
-                log.error("Failed to process: " + url);
+                log.error("Failed to process: {}\nException: {}", url, e.getMessage());
             } finally {
                 if(activeTaskCounter.decrementAndGet() == 0){
+                    synchronized (ImageCrawlerService.this) {
+                        ImageCrawlerService.this.notifyAll();
+                    }
                     executorShutdownService();
                 }
             }
@@ -102,11 +118,11 @@ public class ImageCrawlerService {
         Elements links = document.select("a[href]");
         for(Element link : links){
             try {
-                String url = UrlUtilities.resolveUrl(baseUrl, link.attr("href"), true);
+                String url = UrlUtilities.normalizeUrl(UrlUtilities.resolveUrl(baseUrl, link.attr("href"), true));
                 if(url != null) subPageUrls.add(url);
             }
             catch(Exception e) {
-                log.error("Failed to resolve subpage url: {} | {}", baseUrl, link.attr("href"));
+                log.error("Failed to resolve subpage url: {} | {}\nException: {}", baseUrl, link.attr("href"), e.getMessage());
             }
         }
         return subPageUrls;
@@ -130,7 +146,7 @@ public class ImageCrawlerService {
                 }
             }
             catch(Exception e) {
-                log.error("Failed to resolve image url: {} | {}", baseUrl, imageUrl);
+                log.error("Failed to resolve image url: {} | {}\nException: {}", baseUrl, imageUrl, e.getMessage());
             }
         }
     }

@@ -13,4 +13,5 @@
 - Think about how to identify different classes of images and do they need special handling
 
 - Rate limiting - to prevent overwhelming a website
+- Get the textbox red if the level specified is more than 2
 - Be a friendly crawler and try not to hammer a site

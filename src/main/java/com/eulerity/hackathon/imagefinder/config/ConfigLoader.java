@@ -1,14 +1,17 @@
 package com.eulerity.hackathon.imagefinder.config;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+@Slf4j
 public class ConfigLoader {
     private static final Properties properties = new Properties();
 
     static {
-        try (FileInputStream stream = new FileInputStream("../../resources/application.properties")) {
+        try (FileInputStream stream = new FileInputStream("./src/main/resources/application.properties")) {
             properties.load(stream);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load application.properties", e);

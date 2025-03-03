@@ -14,14 +14,7 @@ import com.eulerity.hackathon.imagefinder.util.UrlUtilities;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -50,26 +43,27 @@ public class ImageFinder extends HttpServlet{
 
 		String url = req.getParameter("url");
 		String recursive = req.getParameter("recursive");
-		String permissibleDepth = req.getParameter("permissibleDepth");
+		String recursiveLevels = req.getParameter("recursiveLevels");
 
 		boolean isRecursive = recursive != null && recursive.equals("true");
-		int permissibleDepthInt;
+		int recursiveLevelsInt;
 		try {
-			permissibleDepthInt = Integer.parseInt(permissibleDepth);
+			recursiveLevelsInt = Integer.parseInt(recursiveLevels);
 		} catch (Exception e) {
-			permissibleDepthInt = 0;
+			recursiveLevelsInt = 0;
 		}
 
-        log.info("Got request of:{} with query params\n- url: {}\n- recursive: {}\n permissibleDepth: {}", path, url, recursive, permissibleDepth);
+        log.info("Got request of:{} with query params\n- url: {}\n- recursive: {}\n recursiveLevels: {}", path, url, recursive, recursiveLevels);
 
 		if(UrlUtilities.isValidURL(url)) {
 			ImageCrawlerService imageCrawlerService;
 			if(isRecursive) {
-				imageCrawlerService = new ImageCrawlerService(true, permissibleDepthInt);
+				imageCrawlerService = new ImageCrawlerService(true, recursiveLevelsInt);
 			}
 			else {
 				imageCrawlerService = new ImageCrawlerService(false);
 			}
+			url = UrlUtilities.normalizeUrl(url);
 			ConcurrentMap<String, CopyOnWriteArrayList<Image>> map = imageCrawlerService.init(url);
 			resp.getWriter().print(GSON.toJson(map));
 		}
