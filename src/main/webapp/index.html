@@ -72,6 +72,12 @@
 			outline: none;
 			display: none;
 		}
+		.level-warning {
+			color: #ff0000;
+			font-size: 0.9em;
+			margin-top: 5px;
+			display: none;
+		}
 		.layout-container {
 			display: flex;
 			gap: 20px;
@@ -192,6 +198,34 @@
 		.image-container img:hover {
 			transform: scale(1.05);
 		}
+		.image-frame {
+			position: relative;
+			display: inline-flex;
+			justify-content: center;
+			align-items: center;
+			margin: 10px;
+			padding: 10px;
+			background: white;
+			border-radius: 8px;
+			box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+			transition: all 0.3s ease;
+			width: 220px; /* Fixed width to ensure consistent frames */
+			height: 220px; /* Fixed height to ensure consistent frames */
+		}
+		.image-frame:hover {
+			transform: translateY(-5px);
+			box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+		}
+		.image-frame img {
+			display: block;
+			max-width: 200px;
+			max-height: 200px;
+			width: auto;
+			height: auto;
+			object-fit: contain;
+			border-radius: 4px;
+			cursor: pointer;
+		}
 		.grab-more-button {
 			padding: 10px 20px;
 			margin-bottom: 20px;
@@ -227,10 +261,104 @@
 			color: #f57c00;
 			text-decoration: underline;
 		}
+		.loading-container {
+			display: none;
+			text-align: center;
+			background: rgba(255, 255, 255, 0.9);
+			padding: 20px;
+			border-radius: 8px;
+			box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+			margin: 20px auto;
+			max-width: 400px;
+		}
+		.loading-container img {
+			width: 100px;
+			height: 100px;
+			margin-bottom: 15px;
+		}
+		.loading-container p {
+			color: #333;
+			font-size: 1.2em;
+			margin: 0;
+		}
+		.modal {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.9);
+			z-index: 1000;
+			overflow: hidden;
+		}
+		.modal-content {
+			position: relative;
+			width: 100%;
+			height: 100%;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+		}
+		.modal-image {
+			max-width: 90%;
+			max-height: 90vh;
+			object-fit: contain;
+			transition: transform 0.3s ease;
+		}
+		.modal-close {
+			position: absolute;
+			top: 20px;
+			right: 20px;
+			color: white;
+			font-size: 30px;
+			cursor: pointer;
+			z-index: 1001;
+		}
+		.modal-controls {
+			position: absolute;
+			bottom: 20px;
+			left: 50%;
+			transform: translateX(-50%);
+			display: flex;
+			gap: 10px;
+			z-index: 1001;
+		}
+		.modal-controls button {
+			padding: 8px 16px;
+			background: rgba(255, 255, 255, 0.2);
+			border: none;
+			border-radius: 4px;
+			color: white;
+			cursor: pointer;
+			transition: background 0.3s ease;
+		}
+		.modal-controls button:hover {
+			background: rgba(255, 255, 255, 0.3);
+		}
+		.modal-link {
+			position: absolute;
+			top: 20px;
+			right: 60px;
+			color: white;
+			text-decoration: none;
+			background: rgba(255, 255, 255, 0.2);
+			padding: 8px 16px;
+			border-radius: 4px;
+			transition: background 0.3s ease;
+		}
+		.modal-link:hover {
+			background: rgba(255, 255, 255, 0.3);
+		}
 	</style>
 </head>
 <body>
 <h1>Photo<span style="font-weight: bold; color: orange;">port</span></h1>
+
+<div class="loading-container" id="loading-container">
+	<img src="https://cdn.pixabay.com/animation/2022/10/11/03/16/03-16-39-160_512.gif" alt="Loading">
+	<p>Processing...</p>
+</div>
 
 <button class="grab-more-button" id="grab-more-button" style="display: none;">Grab More Images</button>
 <h2 class="current-url-title" id="current-url-title"></h2>
@@ -252,9 +380,10 @@
 			</label>
 			<label class="go-deep-label" id="go-deep-label">
 				,&nbsp;go deep by
-				<input type="number" min="0" id="go-deep-input" class="go-deep-input" name="recursiveLevels">
+				<input type="number" min="0" id="go-deep-input" class="go-deep-input" name="recursiveLevels" onchange="checkRecursiveLevel()">
 				levels
 			</label>
+			<div class="level-warning" id="level-warning">Higher levels will result in the scraping of a large number of images, leading to significant wait times!</div>
 		</div>
 	</div>
 </form>
@@ -302,6 +431,19 @@
 	</div>
 </div>
 
+<div class="modal" id="image-modal">
+	<div class="modal-content">
+		<span class="modal-close">&times;</span>
+		<img class="modal-image" id="modal-image" src="" alt="Full size image">
+		<div class="modal-controls">
+			<button onclick="zoomIn()">Zoom In</button>
+			<button onclick="zoomOut()">Zoom Out</button>
+			<button onclick="resetZoom()">Reset</button>
+		</div>
+		<a class="modal-link" id="modal-link" href="#" target="_blank">Open Image</a>
+	</div>
+</div>
+
 <script>
 	function toggleOptions() {
 		const options = document.getElementById('advanced-options');
@@ -318,14 +460,28 @@
 	function showGoDeep() {
 		const input = document.getElementById('go-deep-input');
 		const label = document.getElementById('go-deep-label');
+		const warning = document.getElementById('level-warning');
 
 		if(document.getElementById('recurse').checked) {
 			label.style.display = 'inline';
 			input.style.display = 'inline';
+			checkRecursiveLevel(); // Check initial value
 		}
 		else {
 			label.style.display = 'none';
 			input.style.display = 'none';
+			warning.style.display = 'none';
+		}
+	}
+
+	function checkRecursiveLevel() {
+		const input = document.getElementById('go-deep-input');
+		const warning = document.getElementById('level-warning');
+		
+		if (input.value > 2) {
+			warning.style.display = 'block';
+		} else {
+			warning.style.display = 'none';
 		}
 	}
 
@@ -352,27 +508,51 @@
         }
     }
 
+    function enableForm() {
+        const form = document.getElementById('search-form');
+        const submitButton = form.querySelector('.search-button');
+        form.style.display = 'block';
+        submitButton.disabled = false;
+        document.getElementById('current-url-title').style.display = 'none';
+        document.getElementById('grab-more-button').style.display = 'none';
+        document.getElementById('loading-container').style.display = 'none';
+    }
+
     function makeApiCall(url, method, obj, callback) {
         let xhr = new XMLHttpRequest();
         let responseMap = {};
         
+        // Show loading indicator
+        document.getElementById('loading-container').style.display = 'block';
+        
+        // Set timeout for the request (17.5 seconds)
+        xhr.timeout = 17500;
+        
         xhr.open(method, url);
+        
+        // Handle timeout
+        xhr.ontimeout = function() {
+            alert('Request timed out after 17.5 seconds. The server took too long to respond.');
+            enableForm(); // Re-enable the form
+        };
+        
+        // Handle network errors
+        xhr.onerror = function() {
+            alert('Network error occurred. Please check your connection and try again.');
+            enableForm(); // Re-enable the form
+        };
+        
         xhr.onreadystatechange = function() {
             if (xhr.readyState === XMLHttpRequest.LOADING) {
                 try {
-                    // Get the current response text
                     const currentResponse = xhr.responseText;
                     if (currentResponse.trim()) {
-                        // Split response by newlines and parse each chunk
                         const chunks = currentResponse.split('\n');
                         chunks.forEach(chunk => {
                             if (chunk.trim()) {
                                 try {
                                     const data = JSON.parse(chunk);
-                                    // Add the new data to our response map
                                     responseMap = { ...responseMap, ...data };
-                                    
-                                    // Update the UI with the new data
                                     updateList(responseMap);
                                 } catch (e) {
                                     console.error('Error parsing chunk:', e);
@@ -384,19 +564,54 @@
                     console.error('Error processing response:', error);
                 }
             } else if (xhr.readyState === XMLHttpRequest.DONE) {
+                // Hide loading indicator
+                document.getElementById('loading-container').style.display = 'none';
+                
                 if (xhr.status !== 200) {
                     let message = xhr.status + ":" + xhr.statusText + ":" + xhr.responseText;
                     alert(message);
+                    enableForm(); // Re-enable the form
                     throw 'API call returned bad code: ' + xhr.status;
                 }
-                alert('Transfer complete');
+                // Only show success if we actually received some data
+                if (Object.keys(responseMap).length > 0) {
+                    // Show the grab more button after successful processing
+                    document.getElementById('grab-more-button').style.display = 'block';
+                } else {
+                    alert('No images were found or the connection was interrupted.');
+                    enableForm(); // Re-enable the form only if no data was received
+                }
             }
         };
         
+        // Disable the submit button while processing
+        const submitButton = document.querySelector('.search-button');
+        submitButton.disabled = true;
+        
         xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
         
-        // Store the response map for later use
         window.responseMap = responseMap;
+    }
+
+    let currentZoom = 1;
+    const modal = document.getElementById('image-modal');
+    const modalImage = document.getElementById('modal-image');
+    const modalLink = document.getElementById('modal-link');
+    const modalClose = document.querySelector('.modal-close');
+
+    function zoomIn() {
+        currentZoom = Math.min(currentZoom + 0.2, 3);
+        modalImage.style.transform = `scale(${currentZoom})`;
+    }
+
+    function zoomOut() {
+        currentZoom = Math.max(currentZoom - 0.2, 0.5);
+        modalImage.style.transform = `scale(${currentZoom})`;
+    }
+
+    function resetZoom() {
+        currentZoom = 1;
+        modalImage.style.transform = `scale(${currentZoom})`;
     }
 
     function displayImages(images) {
@@ -415,17 +630,74 @@
         // Show the grab more button
         grabMoreButton.style.display = 'block';
         
-        // Convert images object to array and sort by index
+        // Convert images object to array and sort by index, filter out undefined URLs
         const imageList = Object.entries(images)
-            .map(([_, imageData]) => imageData);
+            .map(([_, imageData]) => imageData)
+            .filter(imageData => imageData && imageData.imageUrl); // Filter out undefined/null entries
         
         imageList.forEach(imageData => {
+            const frame = document.createElement('div');
+            frame.className = 'image-frame';
+            
             const img = document.createElement('img');
             img.width = 200;
             img.src = imageData.imageUrl;
-            imageContainer.appendChild(img);
+            img.alt = 'Image';
+            
+            // Add click handler for modal
+            img.addEventListener('click', () => {
+                modalImage.src = imageData.imageUrl;
+                modalLink.href = imageData.imageUrl;
+                modal.style.display = 'block';
+                resetZoom();
+            });
+            
+            frame.appendChild(img);
+            imageContainer.appendChild(frame);
         });
+
+        // Re-enable the submit button
+        const submitButton = document.querySelector('.search-button');
+        submitButton.disabled = false;
     }
+
+    // Modal close handler
+    modalClose.addEventListener('click', () => {
+        modal.style.display = 'none';
+        resetZoom();
+    });
+
+    // Close modal when clicking outside the image
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+            resetZoom();
+        }
+    });
+
+    // Add pan functionality
+    let isDragging = false;
+    let startX, startY, translateX = 0, translateY = 0;
+
+    modalImage.addEventListener('mousedown', (e) => {
+        if (currentZoom > 1) {
+            isDragging = true;
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        }
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (isDragging) {
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            modalImage.style.transform = `scale(${currentZoom}) translate(${translateX}px, ${translateY}px)`;
+        }
+    });
+
+    document.addEventListener('mouseup', () => {
+        isDragging = false;
+    });
 
     // Add event listener for the grab more button
     document.getElementById('grab-more-button').addEventListener('click', function() {
@@ -450,7 +722,6 @@
     });
 
     function updateList(response) {
-        console.log('Updating with:', response);
         
         // Clear previous images
         const imageContainer = document.getElementById('image-container');
@@ -460,9 +731,14 @@
         const sidebar = document.querySelector('.sidebar');
         sidebar.innerHTML = '';
         
-        // Group URLs by level
+        // Filter out URLs with empty image lists and group by level
         const levels = {};
         for (const url in response) {
+            // Skip if the URL has no images
+            if (!response[url].images || Object.keys(response[url].images).length === 0) {
+                continue;
+            }
+            
             const level = response[url].level;
             if (!levels[level]) {
                 levels[level] = [];
@@ -564,6 +840,15 @@
         const recursiveLevels = recursiveLevelsInput.value || '0';
 
         if (isValidURL(url)) {
+            // Disable the submit button
+            const submitButton = document.querySelector('.search-button');
+            submitButton.disabled = true;
+            
+            // Hide form and grab more button, show loading
+            document.getElementById('search-form').style.display = 'none';
+            document.getElementById('grab-more-button').style.display = 'none';
+            document.getElementById('loading-container').style.display = 'block';
+            
             let urlWithParams = `/main?url=${encodeURIComponent(url)}&recursive=${recursive}&recursiveLevels=${recursiveLevels}`;
             makeApiCall(urlWithParams, 'POST', null, updateList);
         } else {
