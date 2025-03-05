@@ -54,18 +54,12 @@
 		.advanced-options {
 			margin-top: 10px;
 			display: none;
-			text-align: left;
-			max-width: 400px;
+			text-align: center;
 			margin-left: auto;
 			margin-right: auto;
 			padding: 10px;
 			border-radius: 8px;
 			background: #fff3e0;
-		}
-		.options-container {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
 		}
 		.go-deep-label {
 			display: none;
@@ -82,21 +76,31 @@
 </head>
 <body>
 <h1>Photo<span style="font-weight: bold; color: orange;">port</span></h1>
-<div class="search-container">
-	<input type="text" class="search-bar" placeholder="Search for images...">
-	<button class="search-button">Grab</button>
-</div>
-<button class="toggle-button" onclick="toggleOptions()">
-	Advanced Options <span id="arrow" class="arrow">▼</span>
-</button>
-<div class="advanced-options" id="advanced-options">
-	<div class="options-container">
-		<label><input type="checkbox" id="recurse" onclick="showGoDeep()"> Scrape URLs within this page</label>
-		<label class="go-deep-label" id="go-deep-label">
-			,&nbsp;go deep <input type="number" min="0" id="go-deep-input" class="go-deep-input"> levels
-		</label>
+
+<form id="search-form">
+	<div class="search-container">
+		<input type="text" class="search-bar" placeholder="Enter a url..." name="url">
+		<button type="submit" class="search-button">Grab</button>
 	</div>
-</div>
+
+	<button type="button" class="toggle-button" onclick="toggleOptions()">
+		Advanced Options <span id="arrow" class="arrow">▼</span>
+	</button>
+
+	<div class="advanced-options" id="advanced-options">
+		<div class="options-container">
+			<label>
+				<input type="checkbox" id="recurse" name="recursive" onclick="showGoDeep()"> Scrape other pages within this url
+			</label>
+			<label class="go-deep-label" id="go-deep-label">
+				,&nbsp;go deep by
+				<input type="number" min="0" id="go-deep-input" class="go-deep-input" name="recursiveLevels">
+				levels
+			</label>
+		</div>
+	</div>
+</form>
+
 <script>
 	function toggleOptions() {
 		const options = document.getElementById('advanced-options');
@@ -123,6 +127,61 @@
 			input.style.display = 'none';
 		}
 	}
+
+    function isValidURL(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch(e) {
+            return false;
+        }
+    }
+
+    function apiCallBack(xhr, callback) {
+        if (xhr.readyState == XMLHttpRequest.DONE) {
+            if (xhr.status != 200) {
+                let message = xhr.status + ":" + xhr.statusText + ":" + xhr.responseText;
+                alert(message);
+                throw 'API call returned bad code: ' + xhr.status;
+            }
+            let response = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+            if (callback) {
+                callback(response);
+            }
+        }
+    }
+
+    function updateList(response) {
+        console.log(response);
+        // You can handle the response here to display images or other data
+    }
+
+    function makeApiCall(url, method, obj, callback) {
+        let xhr = new XMLHttpRequest();
+        xhr.open(method, url);
+        xhr.onreadystatechange = apiCallBack.bind(null, xhr, callback);
+        xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
+    }
+
+    // Handle form submission
+    document.getElementById('search-form').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const urlInput = document.querySelector('.search-bar');
+        const recursiveCheckbox = document.getElementById('recurse');
+        const recursiveLevelsInput = document.getElementById('go-deep-input');
+
+        const url = urlInput.value;
+        const recursive = recursiveCheckbox.checked;
+        const recursiveLevels = recursiveLevelsInput.value || '0';
+
+        if (isValidURL(url)) {
+            let urlWithParams = `/main?url=${encodeURIComponent(url)}&recursive=${recursive}&recursiveLevels=${recursiveLevels}`;
+            makeApiCall(urlWithParams, 'POST', null, updateList);
+        } else {
+            alert('Please enter a valid URL');
+        }
+    });
 </script>
 </body>
 </html>
