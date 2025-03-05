@@ -7,13 +7,15 @@
 - DONE - Crawl not only the given url, but other pages in the same domain
 - DONE - Add an option to crawl only the current page OR all the subpages
 
-- There will be svg and gif files, mostly useless, filter them
-- Can you identify images as logos? Perhaps collect favicons?
-- Think about how to identify different classes of images and do they need special handling
+- DONE - There will be svg and gif files, mostly useless, filter them
+- DONE - Can you identify images as logos? Perhaps collect favicons?
+- DONE - Think about how to identify different classes of images and do they need special handling
 
 - DONE - Rate limiting - to prevent overwhelming a website
-- Be a friendly crawler and try not to hammer a site
+- DONE - Be a friendly crawler and try not to hammer a site
 - Add options in the front end to specify rate limiting max delay
+
+- Add server sent events for incremental updates to the front end
 
 - UI updates
     - Large view on hover

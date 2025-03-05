@@ -1,153 +1,283 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Photo<span style="font-weight: bold; color: orange;">port</span></title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			text-align: center;
+			padding: 50px;
+			background-color: #f8f9fa;
+		}
+		.search-container {
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			margin-bottom: 20px;
+		}
+		.search-bar {
+			width: 300px;
+			padding: 10px;
+			border: 2px solid #ff9800;
+			border-radius: 20px;
+			outline: none;
+		}
+		.search-button {
+			padding: 10px 20px;
+			margin-left: 10px;
+			border: none;
+			background-color: #ff9800;
+			color: white;
+			border-radius: 20px;
+			cursor: pointer;
+		}
+		.toggle-button {
+			background: none;
+			border: none;
+			cursor: pointer;
+			font-size: 16px;
+			color: #ff9800;
+			display: flex;
+			align-items: center;
+			margin: auto;
+		}
+		.arrow {
+			display: inline-block;
+			transition: transform 0.3s ease;
+			margin-left: 5px;
+		}
+		.rotated {
+			transform: rotate(180deg);
+		}
+		.advanced-options {
+			margin-top: 10px;
+			display: none;
+			text-align: left;
+			max-width: 400px;
+			margin-left: auto;
+			margin-right: auto;
+			padding: 10px;
+			border-radius: 8px;
+			background: #fff3e0;
+		}
+		.options-container {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+		}
+		.go-deep-label {
+			display: none;
+		}
+		.go-deep-input {
+			width: 30px;
+			border: none;
+			border-bottom: 2px solid #ff9800;
+			text-align: center;
+			outline: none;
+			display: none;
+		}
+	</style>
 </head>
 <body>
-	<h1>Eulerity Take-Home Challenge</h1>
-
-	<h2>How it works</h2>
-	<ul>
-		<li>Pressing the submit button on this page will make a POST
-			request to /main</li>
-		<li>That request will contain a form parameter with the url
-			populated in the input box below</li>
-		<li>The ImageFinder servlet will respond to the request with a
-			list of image urls</li>
-		<li>This page contains javascript to send the request and use the
-			response to build a list of images</li>
-	</ul>
-	<h2>Backend Developers</h2>
-	<ul>
-		<li>You can update the ImageFinder servlet to add crawling logic</li>
-		<li>Feel free to add as many classes/packages/files/third party
-			libraries as you'd like</li>
-		<li>We recommend JSoup for parsing web pages</li>
-		<li>You can update this page's html/css/style if you plan on
-			improving the interface</li>
-		<li>Your final submission does not need to contain any of the
-			files included herein</li>
-		<li>This project is just skeleton code so you can hit the ground
-			running.</li>
-		<li>Some ideas:
-			<ul>
-			<li>Crawl not only the given url, but other pages in the same domain</li>
-			<li>Make your crawler multithreaded to speed up response times</li>
-			<li>Be a friendly crawler and try not to hammer a site</li>
-			<li>Think about how to identify different classes of images and do they need special handling</li>
-			<li>Can you identify images as logos? Perhaps collect favicons?</li>
-			<li>Can you mark images that contain people?</li>
-			</ul>
-		</li>
-	</ul>
-	<h2>Important Notes</h2>
-	<p>Congratulations on making it this far into the interview
-		process!</p>
-	<p>
-	This is a free-form hackathon for a very important reason. We wish to see what ideas you can bring to the table.
-	</p>
-	<p><strong>If your submission only contains 5-10 lines of new code, please think twice about submitting it.</strong> If you need more time, you can ask for it.
-	</p>
-	<p>
-	You can use one of the ideas above, but feel free to go off and build something completely different. 
-	The important thing is to submit something that highlights your strengths as a developer.
-	</p>
-	<p>
-	  <b>Remember, this is your chance to show off how you can best contribute to our team.</b>
-	</p>
-	<p>Please remember to think about good design and code style. Comments in your code are great, but thought should also be taken in how to name your variables and method.</p>
-
-	<div class="content">
-		<div class="input">
-			<form>
-				<label for="url">URL:</label>
-				<input type="text" name="url" id="url" required>
-
-				<label for="recursiveLevels">Recursive Levels:</label>
-				<input type="number" name="recursiveLevels" id="recursiveLevels" min="0" value="3" required>
-
-				<label for="recursive">Enable Recursive:</label>
-				<input type="checkbox" name="recursive" value="true" id="recursive">
-
-				<button type="button">Submit</button>
-			</form>
-		</div>
-		<div class="output">
-			<ul class="results">
-				<!-- Results will be displayed here -->
-			</ul>
-		</div>
+<h1>Photo<span style="font-weight: bold; color: orange;">port</span></h1>
+<div class="search-container">
+	<input type="text" class="search-bar" placeholder="Search for images...">
+	<button class="search-button">Grab</button>
+</div>
+<button class="toggle-button" onclick="toggleOptions()">
+	Advanced Options <span id="arrow" class="arrow">▼</span>
+</button>
+<div class="advanced-options" id="advanced-options">
+	<div class="options-container">
+		<label><input type="checkbox" id="recurse" onclick="showGoDeep()"> Scrape URLs within this page</label>
+		<label class="go-deep-label" id="go-deep-label">
+			,&nbsp;go deep <input type="number" min="0" id="go-deep-input" class="go-deep-input"> levels
+		</label>
 	</div>
-
-	<script>
-		function isValidURL(url){
-			try{
-				new URL(url);
-				console.log("Valid url: "+url);
-				return true;
-			}
-			catch(e){
-				console.log("Invalid url: "+url);
-				return false;
-			}
+</div>
+<script>
+	function toggleOptions() {
+		const options = document.getElementById('advanced-options');
+		const arrow = document.getElementById('arrow');
+		if (options.style.display === 'none' || options.style.display === '') {
+			options.style.display = 'block';
+			arrow.classList.add('rotated');
+		} else {
+			options.style.display = 'none';
+			arrow.classList.remove('rotated');
 		}
+	}
 
-		var resultList = document.querySelector('ul.results');
-		var urlInput = document.querySelector('input[name=url]')
+	function showGoDeep() {
+		const input = document.getElementById('go-deep-input');
+		const label = document.getElementById('go-deep-label');
 
-		apiCallBack = function(xhr, callback) {
-			if (xhr.readyState == XMLHttpRequest.DONE) {
-				if (xhr.status != 200) {
-					let message = xhr.status + ":" + xhr.statusText + ":"
-							+ xhr.responseText;
-					alert(message);
-					throw 'API call returned bad code: ' + xhr.status;
-				}
-				let response = xhr.responseText ? JSON.parse(xhr.responseText)
-						: null;
-				if (callback) {
-					callback(response);
-				}
-			}
+		if(document.getElementById('recurse').checked) {
+			label.style.display = 'inline';
+			input.style.display = 'inline';
 		}
-
-		updateList = function(response) {
-			// resultList.innerHTML = '';
-			console.log(response);
-			// for (var i = 0; i < response.length; i++) {
-			// 	var img = document.createElement("img");
-			// 	img.width = 200;
-			// 	img.src = response[i];
-			// 	resultList.appendChild(img);
-			// }
+		else {
+			label.style.display = 'none';
+			input.style.display = 'none';
 		}
-
-		makeApiCall = function(url, method, obj, callback) {
-			let xhr = new XMLHttpRequest();
-			xhr.open(method, url);
-			xhr.onreadystatechange = apiCallBack.bind(null, xhr, callback);
-			xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
-		}
-
-		document.querySelector('button').addEventListener("click", function(event) {
-			event.preventDefault();
-
-			const urlInput = document.querySelector('input[name="url"]');
-			const recursiveCheckbox = document.querySelector('input[name="recursive"]');
-			const recursiveLevelsInput = document.querySelector('input[name="recursiveLevels"]');
-
-			const url = urlInput.value;
-			const recursive = recursiveCheckbox.checked;
-			const recursiveLevels = recursiveLevelsInput.value;
-
-			if (isValidURL(url)) {
-				// Construct the query string with URL and additional parameters
-				let urlWithParams = `/main?url=${url}&recursive=${recursive}&recursiveLevels=${recursiveLevels}`;
-
-				makeApiCall(urlWithParams, 'POST', null, updateList);
-			} else {
-				alert('Please enter a valid URL');
-			}
-		});
-	</script>
+	}
+</script>
 </body>
-
 </html>
+
+
+<!--<html>-->
+<!--<head>-->
+<!--</head>-->
+<!--<body>-->
+<!--	<h1>Eulerity Take-Home Challenge</h1>-->
+
+<!--	<h2>How it works</h2>-->
+<!--	<ul>-->
+<!--		<li>Pressing the submit button on this page will make a POST-->
+<!--			request to /main</li>-->
+<!--		<li>That request will contain a form parameter with the url-->
+<!--			populated in the input box below</li>-->
+<!--		<li>The ImageFinder servlet will respond to the request with a-->
+<!--			list of image urls</li>-->
+<!--		<li>This page contains javascript to send the request and use the-->
+<!--			response to build a list of images</li>-->
+<!--	</ul>-->
+<!--	<h2>Backend Developers</h2>-->
+<!--	<ul>-->
+<!--		<li>You can update the ImageFinder servlet to add crawling logic</li>-->
+<!--		<li>Feel free to add as many classes/packages/files/third party-->
+<!--			libraries as you'd like</li>-->
+<!--		<li>We recommend JSoup for parsing web pages</li>-->
+<!--		<li>You can update this page's html/css/style if you plan on-->
+<!--			improving the interface</li>-->
+<!--		<li>Your final submission does not need to contain any of the-->
+<!--			files included herein</li>-->
+<!--		<li>This project is just skeleton code so you can hit the ground-->
+<!--			running.</li>-->
+<!--		<li>Some ideas:-->
+<!--			<ul>-->
+<!--			<li>Crawl not only the given url, but other pages in the same domain</li>-->
+<!--			<li>Make your crawler multithreaded to speed up response times</li>-->
+<!--			<li>Be a friendly crawler and try not to hammer a site</li>-->
+<!--			<li>Think about how to identify different classes of images and do they need special handling</li>-->
+<!--			<li>Can you identify images as logos? Perhaps collect favicons?</li>-->
+<!--			<li>Can you mark images that contain people?</li>-->
+<!--			</ul>-->
+<!--		</li>-->
+<!--	</ul>-->
+<!--	<h2>Important Notes</h2>-->
+<!--	<p>Congratulations on making it this far into the interview-->
+<!--		process!</p>-->
+<!--	<p>-->
+<!--	This is a free-form hackathon for a very important reason. We wish to see what ideas you can bring to the table.-->
+<!--	</p>-->
+<!--	<p><strong>If your submission only contains 5-10 lines of new code, please think twice about submitting it.</strong> If you need more time, you can ask for it.-->
+<!--	</p>-->
+<!--	<p>-->
+<!--	You can use one of the ideas above, but feel free to go off and build something completely different. -->
+<!--	The important thing is to submit something that highlights your strengths as a developer.-->
+<!--	</p>-->
+<!--	<p>-->
+<!--	  <b>Remember, this is your chance to show off how you can best contribute to our team.</b>-->
+<!--	</p>-->
+<!--	<p>Please remember to think about good design and code style. Comments in your code are great, but thought should also be taken in how to name your variables and method.</p>-->
+
+<!--	<div class="content">-->
+<!--		<div class="input">-->
+<!--			<form>-->
+<!--				<label for="url">URL:</label>-->
+<!--				<input type="text" name="url" id="url" required>-->
+
+<!--				<label for="recursiveLevels">Recursive Levels:</label>-->
+<!--				<input type="number" name="recursiveLevels" id="recursiveLevels" min="0" value="3" required>-->
+
+<!--				<label for="recursive">Enable Recursive:</label>-->
+<!--				<input type="checkbox" name="recursive" value="true" id="recursive">-->
+
+<!--				<button type="button">Submit</button>-->
+<!--			</form>-->
+<!--		</div>-->
+<!--		<div class="output">-->
+<!--			<ul class="results">-->
+<!--				&lt;!&ndash; Results will be displayed here &ndash;&gt;-->
+<!--			</ul>-->
+<!--		</div>-->
+<!--	</div>-->
+
+<!--	<script>-->
+<!--		function isValidURL(url){-->
+<!--			try{-->
+<!--				new URL(url);-->
+<!--				console.log("Valid url: "+url);-->
+<!--				return true;-->
+<!--			}-->
+<!--			catch(e){-->
+<!--				console.log("Invalid url: "+url);-->
+<!--				return false;-->
+<!--			}-->
+<!--		}-->
+
+<!--		var resultList = document.querySelector('ul.results');-->
+<!--		var urlInput = document.querySelector('input[name=url]')-->
+
+<!--		apiCallBack = function(xhr, callback) {-->
+<!--			if (xhr.readyState == XMLHttpRequest.DONE) {-->
+<!--				if (xhr.status != 200) {-->
+<!--					let message = xhr.status + ":" + xhr.statusText + ":"-->
+<!--							+ xhr.responseText;-->
+<!--					alert(message);-->
+<!--					throw 'API call returned bad code: ' + xhr.status;-->
+<!--				}-->
+<!--				let response = xhr.responseText ? JSON.parse(xhr.responseText)-->
+<!--						: null;-->
+<!--				if (callback) {-->
+<!--					callback(response);-->
+<!--				}-->
+<!--			}-->
+<!--		}-->
+
+<!--		updateList = function(response) {-->
+<!--			// resultList.innerHTML = '';-->
+<!--			console.log(response);-->
+<!--			// for (var i = 0; i < response.length; i++) {-->
+<!--			// 	var img = document.createElement("img");-->
+<!--			// 	img.width = 200;-->
+<!--			// 	img.src = response[i];-->
+<!--			// 	resultList.appendChild(img);-->
+<!--			// }-->
+<!--		}-->
+
+<!--		makeApiCall = function(url, method, obj, callback) {-->
+<!--			let xhr = new XMLHttpRequest();-->
+<!--			xhr.open(method, url);-->
+<!--			xhr.onreadystatechange = apiCallBack.bind(null, xhr, callback);-->
+<!--			xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);-->
+<!--		}-->
+
+<!--		document.querySelector('button').addEventListener("click", function(event) {-->
+<!--			event.preventDefault();-->
+
+<!--			const urlInput = document.querySelector('input[name="url"]');-->
+<!--			const recursiveCheckbox = document.querySelector('input[name="recursive"]');-->
+<!--			const recursiveLevelsInput = document.querySelector('input[name="recursiveLevels"]');-->
+
+<!--			const url = urlInput.value;-->
+<!--			const recursive = recursiveCheckbox.checked;-->
+<!--			const recursiveLevels = recursiveLevelsInput.value;-->
+
+<!--			if (isValidURL(url)) {-->
+<!--				// Construct the query string with URL and additional parameters-->
+<!--				let urlWithParams = `/main?url=${url}&recursive=${recursive}&recursiveLevels=${recursiveLevels}`;-->
+
+<!--				makeApiCall(urlWithParams, 'POST', null, updateList);-->
+<!--			} else {-->
+<!--				alert('Please enter a valid URL');-->
+<!--			}-->
+<!--		});-->
+<!--	</script>-->
+<!--</body>-->
+
+<!--</html>-->
