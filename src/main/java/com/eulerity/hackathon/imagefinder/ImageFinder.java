@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import com.eulerity.hackathon.imagefinder.object.Image;
+import com.eulerity.hackathon.imagefinder.object.LevelImagePair;
 import com.eulerity.hackathon.imagefinder.service.ImageCrawlerService;
 import com.eulerity.hackathon.imagefinder.util.UrlUtilities;
 import com.google.gson.Gson;
@@ -64,7 +65,7 @@ public class ImageFinder extends HttpServlet{
 				imageCrawlerService = new ImageCrawlerService(false);
 			}
 			url = UrlUtilities.normalizeUrl(url);
-			ConcurrentMap<String, CopyOnWriteArrayList<Image>> map = imageCrawlerService.init(url);
+			ConcurrentMap<String, LevelImagePair> map = imageCrawlerService.init(url);
 			resp.getWriter().print(GSON.toJson(map));
 		}
 		else{

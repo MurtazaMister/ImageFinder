@@ -23,6 +23,31 @@ public class UrlUtilities {
     }
 
     /**
+     * Normalizes the URL by removing unwanted trailing characters 
+     * without affecting the core structure.
+     * @param url URL to normalize
+     * @return Normalized URL
+     */
+    public static String normalizeTrailingCharacters(String url) {
+        if (url == null || url.isEmpty()) return null;
+
+        String[] unwantedPatterns = {"#/", "./", "../"};
+
+        boolean modified;
+        do {
+            modified = false;
+            for (String pattern : unwantedPatterns) {
+                if (url.endsWith(pattern)) {
+                    url = url.substring(0, url.length() - pattern.length());
+                    modified = true;
+                }
+            }
+        } while (modified);
+
+        return url;
+    }
+
+    /**
      * Checks if the given url is absolute or not
      * @param url URL
      * @return {@code true} if absolute URL is supplied, otherwise false

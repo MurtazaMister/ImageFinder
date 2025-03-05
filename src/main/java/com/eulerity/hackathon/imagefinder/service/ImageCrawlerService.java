@@ -2,6 +2,7 @@ package com.eulerity.hackathon.imagefinder.service;
 
 import com.eulerity.hackathon.imagefinder.config.ConfigLoader;
 import com.eulerity.hackathon.imagefinder.object.Image;
+import com.eulerity.hackathon.imagefinder.object.LevelImagePair;
 import com.eulerity.hackathon.imagefinder.util.UrlUtilities;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.HttpStatusException;
@@ -35,7 +36,7 @@ public class ImageCrawlerService {
     // Concurrency mechanism
     private ExecutorService executorService = Executors.newFixedThreadPool(ConfigLoader.get("crawler.maxThreads", 8));
     // Object to store image objects for their respective webpage's URL
-    private ConcurrentMap<String, CopyOnWriteArrayList<Image>> imageDb = new ConcurrentHashMap<>();
+    private ConcurrentMap<String, LevelImagePair> imageDb = new ConcurrentHashMap<>();
     private final AtomicInteger activeTaskCounter = new AtomicInteger(0);
 
     // Class parameters
@@ -61,9 +62,9 @@ public class ImageCrawlerService {
      * @param url URL of the webpage to be crawled
      * @return {@code ConcurrentMap<String, CopyOnWriteArrayList<Image>>} Map of {@code (url, List<Image>)}
      */
-    public ConcurrentMap<String, CopyOnWriteArrayList<Image>> init(String url){
+    public ConcurrentMap<String, LevelImagePair> init(String url){
         log.info("Crawl initiate request for: {}", url);
-        init(url, 0);
+        init(UrlUtilities.normalizeTrailingCharacters(url), 0);
 
         synchronized (this) {
             while (activeTaskCounter.get() > 0) {
@@ -85,9 +86,9 @@ public class ImageCrawlerService {
      */
     public void init(String url, int depth){
         if(depth > permissibleDepth) return;
-        if(imageDb.containsKey(url)) return;
+        if(imageDb.containsKey(UrlUtilities.normalizeTrailingCharacters(url))) return;
 
-        imageDb.put(url, new CopyOnWriteArrayList<>());
+        imageDb.put(url, new LevelImagePair(depth));
         activeTaskCounter.incrementAndGet();
         crawl(url, depth);
     }
