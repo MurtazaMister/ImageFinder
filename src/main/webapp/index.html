@@ -192,10 +192,48 @@
 		.image-container img:hover {
 			transform: scale(1.05);
 		}
+		.grab-more-button {
+			padding: 10px 20px;
+			margin-bottom: 20px;
+			border: none;
+			background-color: #ff9800;
+			color: white;
+			border-radius: 20px;
+			cursor: pointer;
+			font-size: 1em;
+			transition: background-color 0.2s;
+			display: block;
+			margin-left: auto;
+			margin-right: auto;
+		}
+		.grab-more-button:hover {
+			background-color: #f57c00;
+		}
+		.current-url-title {
+			margin-bottom: 20px;
+			color: #333;
+			font-size: 1.2em;
+			display: none; /* Hide by default */
+			padding: 10px 20px;
+			background: #fff3e0;
+			border-radius: 8px;
+		}
+		.current-url-title a {
+			color: #ff9800;
+			text-decoration: none;
+			transition: color 0.2s;
+		}
+		.current-url-title a:hover {
+			color: #f57c00;
+			text-decoration: underline;
+		}
 	</style>
 </head>
 <body>
 <h1>Photo<span style="font-weight: bold; color: orange;">port</span></h1>
+
+<button class="grab-more-button" id="grab-more-button" style="display: none;">Grab More Images</button>
+<h2 class="current-url-title" id="current-url-title"></h2>
 
 <form id="search-form">
 	<div class="search-container">
@@ -365,13 +403,17 @@
         const imageContainer = document.getElementById('image-container');
         imageContainer.innerHTML = '';
         
-        // Add the URL as a title above the images
-        const title = document.createElement('h2');
-        title.style.marginBottom = '20px';
-        title.style.color = '#333';
-        title.style.fontSize = '1.2em';
-        title.textContent = images.url || 'Images';
-        imageContainer.appendChild(title);
+        // Hide the form and show the grab more button and title
+        document.getElementById('search-form').style.display = 'none';
+        const grabMoreButton = document.getElementById('grab-more-button');
+        const currentUrlTitle = document.getElementById('current-url-title');
+        
+        // Update and show the title with link
+        currentUrlTitle.innerHTML = `<a href="${images.url}" target="_blank">${images.url || 'Images'}</a>`;
+        currentUrlTitle.style.display = 'block';
+        
+        // Show the grab more button
+        grabMoreButton.style.display = 'block';
         
         // Convert images object to array and sort by index
         const imageList = Object.entries(images)
@@ -384,6 +426,28 @@
             imageContainer.appendChild(img);
         });
     }
+
+    // Add event listener for the grab more button
+    document.getElementById('grab-more-button').addEventListener('click', function() {
+        // Show the form
+        document.getElementById('search-form').style.display = 'block';
+        // Hide the title and button
+        document.getElementById('current-url-title').style.display = 'none';
+        this.style.display = 'none';
+        // Clear the image container
+        document.getElementById('image-container').innerHTML = '';
+        
+        // Reset all form fields
+        document.querySelector('.search-bar').value = '';
+        document.getElementById('recurse').checked = false;
+        document.getElementById('go-deep-input').value = '';
+        document.getElementById('go-deep-label').style.display = 'none';
+        document.getElementById('go-deep-input').style.display = 'none';
+        
+        // Reset advanced options
+        document.getElementById('advanced-options').style.display = 'none';
+        document.getElementById('arrow').classList.remove('rotated');
+    });
 
     function updateList(response) {
         console.log('Updating with:', response);
