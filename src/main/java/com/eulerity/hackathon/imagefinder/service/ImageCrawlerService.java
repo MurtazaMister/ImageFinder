@@ -4,6 +4,8 @@ import com.eulerity.hackathon.imagefinder.config.ConfigLoader;
 import com.eulerity.hackathon.imagefinder.object.Image;
 import com.eulerity.hackathon.imagefinder.object.LevelImagePair;
 import com.eulerity.hackathon.imagefinder.util.UrlUtilities;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
@@ -11,10 +13,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import java.io.PrintWriter;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,6 +24,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public class ImageCrawlerService {
+
+    protected static final Gson GSON = new GsonBuilder().create();
+
+    // Streaming mechanism
+    PrintWriter writer;
 
     // Rate limiting mechanism
     private final Object lock = new Object();
@@ -62,7 +67,8 @@ public class ImageCrawlerService {
      * @param url URL of the webpage to be crawled
      * @return {@code ConcurrentMap<String, CopyOnWriteArrayList<Image>>} Map of {@code (url, List<Image>)}
      */
-    public ConcurrentMap<String, LevelImagePair> init(String url){
+    public ConcurrentMap<String, LevelImagePair> init(String url, PrintWriter writer){
+        this.writer = writer;
         log.info("Crawl initiate request for: {}", url);
         init(UrlUtilities.normalizeTrailingCharacters(url), 0);
 
@@ -143,6 +149,11 @@ public class ImageCrawlerService {
             } catch (Exception e) {
                 log.error("Failed to process: {}\nException: {}", url, e.getMessage());
             } finally {
+                Map<String, LevelImagePair> data = new HashMap<>();
+                data.put(url, imageDb.get(url));
+                String jsonResponse = GSON.toJson(data) + '\n';
+                writer.write(jsonResponse);
+                writer.flush();
                 if(activeTaskCounter.decrementAndGet() == 0){
                     synchronized (ImageCrawlerService.this) {
                         ImageCrawlerService.this.notifyAll();
@@ -201,7 +212,7 @@ public class ImageCrawlerService {
      * Gracefully shuts down the executor service once all tasks are completed
      */
     public void executorShutdownService(){
-
+        writer.close();
         log.info("Total requests made: {}", totalRequests.get());
         log.info("Failed requests: {}", failedRequests.get());
         log.info("Success percentage: {}%", Math.ceil((((double)totalRequests.get()-failedRequests.get())*100)/(double)totalRequests.get()));

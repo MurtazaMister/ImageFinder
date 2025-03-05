@@ -271,8 +271,55 @@
         }
     }
 
+    function makeApiCall(url, method, obj, callback) {
+        let xhr = new XMLHttpRequest();
+        let responseMap = {};
+        
+        xhr.open(method, url);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === XMLHttpRequest.LOADING) {
+                try {
+                    // Get the current response text
+                    const currentResponse = xhr.responseText;
+                    if (currentResponse.trim()) {
+                        // Split response by newlines and parse each chunk
+                        const chunks = currentResponse.split('\n');
+                        chunks.forEach(chunk => {
+                            if (chunk.trim()) {
+                                try {
+                                    const data = JSON.parse(chunk);
+                                    // Add the new data to our response map
+                                    responseMap = { ...responseMap, ...data };
+                                    
+                                    // Update the UI with the new data
+                                    updateList(responseMap);
+                                } catch (e) {
+                                    console.error('Error parsing chunk:', e);
+                                }
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error processing response:', error);
+                }
+            } else if (xhr.readyState === XMLHttpRequest.DONE) {
+                if (xhr.status !== 200) {
+                    let message = xhr.status + ":" + xhr.statusText + ":" + xhr.responseText;
+                    alert(message);
+                    throw 'API call returned bad code: ' + xhr.status;
+                }
+                alert('Transfer complete');
+            }
+        };
+        
+        xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
+        
+        // Store the response map for later use
+        window.responseMap = responseMap;
+    }
+
     function updateList(response) {
-        console.log(response);
+        console.log('Updating with:', response);
         
         // Clear previous images
         const imageContainer = document.getElementById('image-container');
@@ -383,13 +430,6 @@
             img.src = imageData.imageUrl;
             imageContainer.appendChild(img);
         });
-    }
-
-    function makeApiCall(url, method, obj, callback) {
-        let xhr = new XMLHttpRequest();
-        xhr.open(method, url);
-        xhr.onreadystatechange = apiCallBack.bind(null, xhr, callback);
-        xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
     }
 
     // Handle form submission

@@ -16,6 +16,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.PrintWriter;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -39,12 +41,18 @@ public class ImageFinder extends HttpServlet{
 
 	@Override
 	protected final void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-		resp.setContentType("text/json");
+		resp.setContentType("text/event-stream");
+		resp.setCharacterEncoding("UTF-8");
+		resp.setHeader("Cache-Control", "no-cache");
+		resp.setHeader("Connection", "keep-alive");
+
 		String path = req.getServletPath();
 
 		String url = req.getParameter("url");
 		String recursive = req.getParameter("recursive");
 		String recursiveLevels = req.getParameter("recursiveLevels");
+
+		PrintWriter writer = resp.getWriter();
 
 		boolean isRecursive = recursive != null && recursive.equals("true");
 		int recursiveLevelsInt;
@@ -65,12 +73,13 @@ public class ImageFinder extends HttpServlet{
 				imageCrawlerService = new ImageCrawlerService(false);
 			}
 			url = UrlUtilities.normalizeUrl(url);
-			ConcurrentMap<String, LevelImagePair> map = imageCrawlerService.init(url);
-			resp.getWriter().print(GSON.toJson(map));
+			imageCrawlerService.init(url, writer);
+//			resp.getWriter().print(GSON.toJson(map));
 		}
 		else{
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 Bad Request
-			resp.getWriter().write("Invalid URL provided.");
+			writer.write("error: Invalid URL");
+			writer.flush();
 		}
 	}
 }
