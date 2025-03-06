@@ -1,5 +1,5 @@
 /**
- * Toggles the visibility of advanced options section and rotates the arrow icon
+ * Toggles visibility of advanced options panel and rotates arrow icon
  */
 function toggleOptions() {
     const options = document.getElementById('advanced-options');
@@ -14,7 +14,7 @@ function toggleOptions() {
 }
 
 /**
- * Shows or hides the recursive level input and warning based on checkbox state
+ * Shows/hides recursive level input based on checkbox state
  */
 function showGoDeep() {
     const input = document.getElementById('go-deep-input');
@@ -34,8 +34,7 @@ function showGoDeep() {
 }
 
 /**
- * Validates and displays warning for recursive level input
- * Shows warning if level is greater than 2
+ * Validates recursive level input and shows warning if level > 2
  */
 function checkRecursiveLevel() {
     const input = document.getElementById('go-deep-input');
@@ -49,9 +48,8 @@ function checkRecursiveLevel() {
 }
 
 /**
- * Validates if a given string is a valid URL
- * @param {string} url - The URL string to validate
- * @returns {boolean} - True if URL is valid, false otherwise
+ * Validates if input string is a valid URL
+ * @param url URL string to validate
  */
 function isValidURL(url) {
     try {
@@ -63,10 +61,9 @@ function isValidURL(url) {
 }
 
 /**
- * Handles the callback for API responses
- * @param {XMLHttpRequest} xhr - The XMLHttpRequest object
- * @param {Function} callback - Callback function to handle the response
- * @throws {Error} If API call returns a non-200 status code
+ * Handles API response and calls callback with parsed data
+ * @param xhr XMLHttpRequest object
+ * @param callback Function to handle response data
  */
 function apiCallBack(xhr, callback) {
     if (xhr.readyState == XMLHttpRequest.DONE) {
@@ -83,8 +80,7 @@ function apiCallBack(xhr, callback) {
 }
 
 /**
- * Enables the search form and resets UI elements to their initial state
- * Shows the form, enables submit button, and hides other UI elements
+ * Resets form state and UI elements to initial state
  */
 function enableForm() {
     const form = document.getElementById('search-form');
@@ -97,18 +93,12 @@ function enableForm() {
 }
 
 /**
- * Makes an API call to fetch images from the specified URL
- * @param {string} url - The API endpoint URL
- * @param {string} method - HTTP method (GET/POST)
- * @param {Object|FormData|string} obj - Data to send with the request
- * @param {Function} callback - Callback function to handle the response
- * 
- * Features:
- * - Handles streaming responses
- * - Implements timeout (17.5 seconds)
- * - Manages loading states
- * - Handles network errors
- * - Updates UI based on response
+ * Makes API call to fetch images from URL
+ * Handles streaming responses, timeouts, and error states
+ * @param url API endpoint URL
+ * @param method HTTP method (GET/POST)
+ * @param obj Data to send with request
+ * @param callback Function to handle response
  */
 function makeApiCall(url, method, obj, callback) {
     let xhr = new XMLHttpRequest();
@@ -193,16 +183,25 @@ const modalImage = document.getElementById('modal-image');
 const modalLink = document.getElementById('modal-link');
 const modalClose = document.querySelector('.modal-close');
 
+/**
+ * Increases zoom level of modal image
+ */
 function zoomIn() {
     currentZoom = Math.min(currentZoom + 0.2, 3);
     modalImage.style.transform = `scale(${currentZoom})`;
 }
 
+/**
+ * Decreases zoom level of modal image
+ */
 function zoomOut() {
     currentZoom = Math.max(currentZoom - 0.2, 0.5);
     modalImage.style.transform = `scale(${currentZoom})`;
 }
 
+/**
+ * Resets zoom level of modal image to default
+ */
 function resetZoom() {
     currentZoom = 1;
     modalImage.style.transform = `scale(${currentZoom})`;
@@ -210,6 +209,10 @@ function resetZoom() {
 
 let currentFrameSize = 220;
 
+/**
+ * Adjusts size of image frames and their contained images
+ * @param action 'increase' or 'decrease' to change frame size
+ */
 function adjustFrameSize(action) {
     const frames = document.querySelectorAll('.image-frame');
     const sizeChange = 20;
@@ -233,14 +236,9 @@ function adjustFrameSize(action) {
 }
 
 /**
- * Displays images in the main content area
- * @param {Object} images - Object containing image data and metadata
- * 
- * Features:
- * - Creates image frames with proper sizing
- * - Handles image click events for modal view
- * - Updates UI elements (title, controls)
- * - Manages visibility of various UI components
+ * Displays images in main content area
+ * Creates image frames and handles click events
+ * @param images Object containing image data and metadata
  */
 function displayImages(images) {
     const imageContainer = document.getElementById('image-container');
@@ -294,11 +292,17 @@ function displayImages(images) {
     });
 }
 
+/**
+ * Closes modal and resets zoom when close button is clicked
+ */
 modalClose.addEventListener('click', () => {
     modal.style.display = 'none';
     resetZoom();
 });
 
+/**
+ * Closes modal and resets zoom when clicking outside image
+ */
 modal.addEventListener('click', (e) => {
     if (e.target === modal) {
         modal.style.display = 'none';
@@ -309,6 +313,9 @@ modal.addEventListener('click', (e) => {
 let isDragging = false;
 let startX, startY, translateX = 0, translateY = 0;
 
+/**
+ * Enables image dragging in modal when zoomed in
+ */
 modalImage.addEventListener('mousedown', (e) => {
     if (currentZoom > 1) {
         isDragging = true;
@@ -317,6 +324,9 @@ modalImage.addEventListener('mousedown', (e) => {
     }
 });
 
+/**
+ * Updates image position while dragging in modal
+ */
 document.addEventListener('mousemove', (e) => {
     if (isDragging) {
         translateX = e.clientX - startX;
@@ -325,10 +335,16 @@ document.addEventListener('mousemove', (e) => {
     }
 });
 
+/**
+ * Disables image dragging when mouse is released
+ */
 document.addEventListener('mouseup', () => {
     isDragging = false;
 });
 
+/**
+ * Resets form and UI when grab more button is clicked
+ */
 document.getElementById('grab-more-button').addEventListener('click', function() {
     document.getElementById('grab-more-button').style.display = 'none';
     document.getElementById('current-url-title').style.display = 'none';
@@ -349,15 +365,9 @@ document.getElementById('grab-more-button').addEventListener('click', function()
 });
 
 /**
- * Updates the sidebar with categorized image results
- * @param {Object} response - Response data containing categorized images
- * 
- * Features:
- * - Creates level sections
- * - Groups images by level
- * - Handles expand/collapse functionality
- * - Updates item counts
- * - Manages category selection
+ * Updates sidebar with categorized image results
+ * Groups images by level and handles expand/collapse
+ * @param response Response data containing categorized images
  */
 function updateList(response) {
     const imageContainer = document.getElementById('image-container');
