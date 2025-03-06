@@ -8,8 +8,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.eulerity.hackathon.imagefinder.object.Image;
-import com.eulerity.hackathon.imagefinder.object.LevelImagePair;
 import com.eulerity.hackathon.imagefinder.service.ImageCrawlerService;
 import com.eulerity.hackathon.imagefinder.util.UrlUtilities;
 import com.google.gson.Gson;
@@ -17,9 +15,6 @@ import com.google.gson.GsonBuilder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.PrintWriter;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @WebServlet(
     name = "ImageFinder",
@@ -79,6 +74,7 @@ public class ImageFinder extends HttpServlet{
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 Bad Request
 			writer.write("error: Invalid URL");
 			writer.flush();
+			writer.close();
 		}
 	}
 }

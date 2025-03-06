@@ -64,10 +64,10 @@ public class ImageCrawlerService {
 
     /**
      * Entry point for ImageCrawlerService class
+     *
      * @param url URL of the webpage to be crawled
-     * @return {@code ConcurrentMap<String, CopyOnWriteArrayList<Image>>} Map of {@code (url, List<Image>)}
      */
-    public ConcurrentMap<String, LevelImagePair> init(String url, PrintWriter writer){
+    public void init(String url, PrintWriter writer){
         this.writer = writer;
         log.info("Crawl initiate request for: {}", url);
         init(UrlUtilities.normalizeTrailingCharacters(url), 0);
@@ -81,8 +81,6 @@ public class ImageCrawlerService {
                 }
             }
         }
-
-        return imageDb;
     }
 
     /**

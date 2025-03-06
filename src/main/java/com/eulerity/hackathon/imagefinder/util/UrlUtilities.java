@@ -128,6 +128,7 @@ public class UrlUtilities {
      * @return {@code boolean} {@code true} if url is in valid format, {@code false} otherwise
      */
     public static boolean isValidURL(String url) {
+        if(url.trim().contains(" ")) return false;
         try{
             new URL(url);
             return true;

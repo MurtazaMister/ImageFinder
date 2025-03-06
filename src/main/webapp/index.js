@@ -109,6 +109,7 @@ function makeApiCall(url, method, obj, callback) {
     let logoSet = new Set();
     let gifSet = new Set();
     let faviconSet = new Set();
+    let svgSet = new Set();
     
     function resetTimeout() {
         if (timeoutId) {
@@ -142,6 +143,13 @@ function makeApiCall(url, method, obj, callback) {
                 url: 'Favicons'
             };
         }
+        if (!responseMap['svgs']) {
+            responseMap['svgs'] = {
+                level: 'SVGs',
+                images: {},
+                url: 'SVGs'
+            };
+        }
 
         Object.entries(data).forEach(([url, urlData]) => {
             if (urlData.images) {
@@ -164,6 +172,12 @@ function makeApiCall(url, method, obj, callback) {
                         if (!faviconSet.has(imageUrl)) {
                             faviconSet.add(imageUrl);
                             responseMap['favicons'].images[imageUrl] = imgData;
+                        }
+                        delete urlData.images[key];
+                    } else if (imgData.type === 'SVG') {
+                        if (!svgSet.has(imageUrl)) {
+                            svgSet.add(imageUrl);
+                            responseMap['svgs'].images[imageUrl] = imgData;
                         }
                         delete urlData.images[key];
                     }
@@ -316,8 +330,19 @@ function displayImages(images) {
     const grabMoreButton = document.getElementById('grab-more-button');
     const currentUrlTitle = document.getElementById('current-url-title');
     
-    currentUrlTitle.querySelector('a').href = images.url;
-    currentUrlTitle.querySelector('a').textContent = images.url || 'Images';
+    const specialCategories = ['Logos', 'GIFs', 'Favicons', 'SVGs'];
+    const titleLink = currentUrlTitle.querySelector('a');
+    
+    if (specialCategories.includes(images.url)) {
+        titleLink.removeAttribute('href');
+        titleLink.style.cursor = 'default';
+        titleLink.style.textDecoration = 'none';
+    } else {
+        titleLink.href = images.url;
+        titleLink.style.cursor = 'pointer';
+        titleLink.style.textDecoration = 'underline';
+    }
+    titleLink.textContent = images.url || 'Images';
     currentUrlTitle.style.display = 'flex';
     
     currentUrlTitle.querySelector('.size-controls').style.display = 'flex';
@@ -444,7 +469,7 @@ function updateList(response) {
     const sidebar = document.querySelector('.sidebar');
     sidebar.innerHTML = '';
     
-    const specialLevels = ['Logos', 'GIFs', 'Favicons'];
+    const specialLevels = ['Logos', 'GIFs', 'Favicons', 'SVGs'];
     const levels = {};
     
     specialLevels.forEach(level => {

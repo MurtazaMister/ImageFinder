@@ -2,6 +2,8 @@ package com.eulerity.hackathon.imagefinder.object;
 
 import lombok.*;
 
+import java.util.Objects;
+
 /**
  * Image class consisting of {@code imageUrl} and {@code type} of image
  */
@@ -15,7 +17,21 @@ public class Image {
         GIF,
         FAVICON,
         LOGO,
+        SVG,
         IMAGE
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Image image = (Image) obj;
+        return Objects.equals(imageUrl, image.imageUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(imageUrl);
     }
 
     private String imageUrl;
@@ -36,6 +52,9 @@ public class Image {
         }
         else if(imageUrl.toLowerCase().contains(".gif")){
             imageObjectType = Image.Type.GIF;
+        }
+        else if(imageUrl.toLowerCase().contains(".svg")){
+            imageObjectType = Image.Type.SVG;
         }
         else{
             imageObjectType = Image.Type.IMAGE;
