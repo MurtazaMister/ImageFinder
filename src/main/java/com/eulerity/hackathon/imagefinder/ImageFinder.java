@@ -74,7 +74,6 @@ public class ImageFinder extends HttpServlet{
 			}
 			url = UrlUtilities.normalizeUrl(url);
 			imageCrawlerService.init(url, writer);
-//			resp.getWriter().print(GSON.toJson(map));
 		}
 		else{
 			resp.setStatus(HttpServletResponse.SC_BAD_REQUEST); // 400 Bad Request

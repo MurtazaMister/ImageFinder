@@ -106,7 +106,6 @@ function makeApiCall(url, method, obj, callback) {
     let timeoutId;
     let accumulatedResponse = '';
     
-    // Special category sets to avoid duplicates
     let logoSet = new Set();
     let gifSet = new Set();
     let faviconSet = new Set();
@@ -122,7 +121,6 @@ function makeApiCall(url, method, obj, callback) {
     }
     
     function processSpecialImages(data) {
-        // Create special category containers if they don't exist
         if (!responseMap['logos']) {
             responseMap['logos'] = {
                 level: 'Logos',
@@ -145,13 +143,11 @@ function makeApiCall(url, method, obj, callback) {
             };
         }
 
-        // Process each URL's images
         Object.entries(data).forEach(([url, urlData]) => {
             if (urlData.images) {
                 Object.entries(urlData.images).forEach(([key, imgData]) => {
                     const imageUrl = imgData.imageUrl;
                     
-                    // Process based on type
                     if (imgData.type === 'LOGO') {
                         if (!logoSet.has(imageUrl)) {
                             logoSet.add(imageUrl);
@@ -173,7 +169,6 @@ function makeApiCall(url, method, obj, callback) {
                     }
                 });
                 
-                // Only keep the URL data if it has remaining images
                 if (Object.keys(urlData.images).length > 0) {
                     responseMap[url] = urlData;
                 }
@@ -345,10 +340,8 @@ function displayImages(images) {
         img.src = imageData.imageUrl;
         img.alt = 'Image';
         
-        // Extract image name from URL
         const imageName = imageData.imageUrl.split('/').pop().split('?')[0];
         
-        // Add tooltip
         const tooltip = document.createElement('div');
         tooltip.className = 'tooltip';
         tooltip.textContent = imageName;
@@ -454,7 +447,6 @@ function updateList(response) {
     const specialLevels = ['Logos', 'GIFs', 'Favicons'];
     const levels = {};
     
-    // First process special categories
     specialLevels.forEach(level => {
         const key = level.toLowerCase();
         if (response[key] && response[key].images && Object.keys(response[key].images).length > 0) {
@@ -465,7 +457,6 @@ function updateList(response) {
         }
     });
     
-    // Then process numbered levels
     for (const url in response) {
         if (!specialLevels.map(l => l.toLowerCase()).includes(url)) {
             if (!response[url].images || Object.keys(response[url].images).length === 0) {
@@ -483,7 +474,6 @@ function updateList(response) {
         }
     }
     
-    // Sort and create sections - only include special levels that have images
     const activeSpecialLevels = specialLevels.filter(level => levels[level]);
     const allLevels = [...activeSpecialLevels, ...Object.keys(levels).filter(l => !specialLevels.includes(l)).sort((a, b) => a - b)];
     
@@ -527,7 +517,6 @@ function updateList(response) {
             categoryTitle.textContent = category.url;
             categorySection.appendChild(categoryTitle);
             
-            // Add image count bubble
             const imageCount = document.createElement('span');
             imageCount.className = 'image-count';
             const numImages = Object.keys(category.images).length;

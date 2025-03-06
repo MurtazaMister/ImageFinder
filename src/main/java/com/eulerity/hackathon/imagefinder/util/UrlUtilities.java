@@ -137,6 +137,11 @@ public class UrlUtilities {
         }
     }
 
+    /**
+     * Function to check whether a URL conforms to an image family or not
+     * @param url
+     * @return {@code true} if it does, {@code false} otherwise
+     */
     public static boolean isImageUrl(String url) {
         for(String ext : imageFormats){
             if(url.contains(ext)) return true;
