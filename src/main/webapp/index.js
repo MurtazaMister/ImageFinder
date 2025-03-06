@@ -104,6 +104,7 @@ function makeApiCall(url, method, obj, callback) {
     let xhr = new XMLHttpRequest();
     let responseMap = {};
     let timeoutId;
+    let accumulatedResponse = ''; // Buffer for accumulating partial responses
     
     function resetTimeout() {
         if (timeoutId) {
@@ -129,9 +130,13 @@ function makeApiCall(url, method, obj, callback) {
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.LOADING) {
             try {
-                const currentResponse = xhr.responseText;
-                if (currentResponse.trim()) {
-                    const chunks = currentResponse.split('\n');
+                // Get only the new data since last response
+                const newData = xhr.responseText.substring(accumulatedResponse.length);
+                accumulatedResponse = xhr.responseText;
+
+                if (newData.trim()) {
+                    // Split by newline and process each complete chunk
+                    const chunks = newData.split('\n');
                     chunks.forEach(chunk => {
                         if (chunk.trim()) {
                             try {
@@ -140,8 +145,7 @@ function makeApiCall(url, method, obj, callback) {
                                 updateList(responseMap);
                                 resetTimeout();
                             } catch (e) {
-                                console.error('Error parsing chunk:', e);
-                                enableForm();
+                                console.log('Incomplete chunk, waiting for more data');
                             }
                         }
                     });
