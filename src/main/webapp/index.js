@@ -345,10 +345,18 @@ function displayImages(images) {
         img.src = imageData.imageUrl;
         img.alt = 'Image';
         
+        // Extract image name from URL
+        const imageName = imageData.imageUrl.split('/').pop().split('?')[0];
+        
+        // Add tooltip
+        const tooltip = document.createElement('div');
+        tooltip.className = 'tooltip';
+        tooltip.textContent = imageName;
+        frame.appendChild(tooltip);
+        
         img.addEventListener('click', () => {
             modalImage.src = imageData.imageUrl;
             modalLink.href = imageData.imageUrl;
-            const imageName = imageData.imageUrl.split('/').pop().split('?')[0];
             document.getElementById('modal-image-name').textContent = imageName;
             modal.style.display = 'block';
             resetZoom();

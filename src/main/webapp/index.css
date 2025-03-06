@@ -272,6 +272,28 @@ body {
     cursor: pointer;
 }
 
+.image-frame .tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+    z-index: 100;
+}
+
+.image-frame:hover .tooltip {
+    visibility: visible;
+}
+
 .grab-more-button {
     padding: 10px 20px;
     margin-bottom: 20px;
