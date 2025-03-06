@@ -124,14 +124,17 @@ http://localhost:8080
   - [`service/`](./src/main/java/com/eulerity/hackathon/imagefinder/service): Service layer for image crawling logic
   - [`object/`](./src/main/java/com/eulerity/hackathon/imagefinder/object): Contains classes for storage
   - [`util/`](./src/main/java/com/eulerity/hackathon/imagefinder/util): Contains utility classes and helpers
-  - [`config/`](./src/main/java/com/eulerity/hackathon/imagefinder/config): Contains configuration files
+  - [`config/`](./src/main/java/com/eulerity/hackathon/imagefinder/config): Contains modules to load values from configuration files into the system
+
+### Configuration File
+- [`src/main/resources`](./src/main/resources)
+  - [`application.properties`](./src/main/resources/application.properties): Contains configuration variables such as threadPool size, crawler timeout, etc.
 
 ### Frontend
 - [`src/main/webapp/`](./src/main/webapp)
   - [`index.html`](./src/main/webapp/index.html): Main application interface
   - [`index.css`](./src/main/webapp/index.css): Styles for UI
   - [`index.js`](./src/main/webapp/index.js): Client-side functionality
-  - [`favicon.ico`](./src/main/webapp/favicon.ico): Browser tab icon
 
 ## License
 
