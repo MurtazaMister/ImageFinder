@@ -251,6 +251,33 @@
 			padding: 10px 20px;
 			background: #fff3e0;
 			border-radius: 8px;
+			align-items: center;
+			justify-content: space-between; /* Change to space-between to push controls to the right */
+			gap: 15px;
+		}
+		.size-controls {
+			display: none; /* Hide by default */
+			gap: 5px;
+			margin-left: auto; /* Push to the right */
+			background: none; /* Remove any background */
+		}
+		.size-controls button {
+			padding: 5px 10px;
+			background: #ff9800;
+			border: none;
+			border-radius: 4px;
+			color: white;
+			cursor: pointer;
+			font-size: 1.2em;
+			transition: background-color 0.2s;
+			width: 30px; /* Fixed width for both buttons */
+			height: 30px; /* Fixed height for both buttons */
+			display: flex;
+			align-items: center;
+			justify-content: center;
+		}
+		.size-controls button:hover {
+			background: #f57c00;
 		}
 		.current-url-title a {
 			color: #ff9800;
@@ -350,6 +377,22 @@
 		.modal-link:hover {
 			background: rgba(255, 255, 255, 0.3);
 		}
+		.modal-image-name {
+			position: absolute;
+			top: 20px;
+			left: 20px;
+			color: white;
+			background: rgba(255, 255, 255, 0.2);
+			padding: 8px 16px;
+			border-radius: 4px;
+			font-size: 1.1em;
+			max-width: 50vw; /* Limit to half the viewport width */
+			overflow: hidden;
+			text-overflow: ellipsis;
+			white-space: nowrap;
+			text-align: left;
+			z-index: 1002; /* Ensure it's above the modal image */
+		}
 	</style>
 </head>
 <body>
@@ -361,7 +404,13 @@
 </div>
 
 <button class="grab-more-button" id="grab-more-button" style="display: none;">Grab More Images</button>
-<h2 class="current-url-title" id="current-url-title"></h2>
+<div class="current-url-title" id="current-url-title">
+	<a href="#" target="_blank"></a>
+	<div class="size-controls">
+		<button onclick="adjustFrameSize('decrease')">-</button>
+		<button onclick="adjustFrameSize('increase')">+</button>
+	</div>
+</div>
 
 <form id="search-form">
 	<div class="search-container">
@@ -434,6 +483,7 @@
 <div class="modal" id="image-modal">
 	<div class="modal-content">
 		<span class="modal-close">&times;</span>
+		<div class="modal-image-name" id="modal-image-name"></div>
 		<img class="modal-image" id="modal-image" src="" alt="Full size image">
 		<div class="modal-controls">
 			<button onclick="zoomIn()">Zoom In</button>
@@ -521,23 +571,30 @@
     function makeApiCall(url, method, obj, callback) {
         let xhr = new XMLHttpRequest();
         let responseMap = {};
+        let timeoutId;
+        
+        // Function to reset timeout
+        function resetTimeout() {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(() => {
+                alert('Request timed out after 17.5 seconds of inactivity. The server took too long to respond.');
+                enableForm(); // Re-enable the form
+            }, 17500);
+        }
         
         // Show loading indicator
         document.getElementById('loading-container').style.display = 'block';
         
-        // Set timeout for the request (17.5 seconds)
-        xhr.timeout = 17500;
+        // Initial timeout setup
+        resetTimeout();
         
         xhr.open(method, url);
         
-        // Handle timeout
-        xhr.ontimeout = function() {
-            alert('Request timed out after 17.5 seconds. The server took too long to respond.');
-            enableForm(); // Re-enable the form
-        };
-        
         // Handle network errors
         xhr.onerror = function() {
+            clearTimeout(timeoutId);
             alert('Network error occurred. Please check your connection and try again.');
             enableForm(); // Re-enable the form
         };
@@ -554,6 +611,8 @@
                                     const data = JSON.parse(chunk);
                                     responseMap = { ...responseMap, ...data };
                                     updateList(responseMap);
+                                    // Reset timeout with each successful chunk
+                                    resetTimeout();
                                 } catch (e) {
                                     console.error('Error parsing chunk:', e);
                                 }
@@ -564,6 +623,7 @@
                     console.error('Error processing response:', error);
                 }
             } else if (xhr.readyState === XMLHttpRequest.DONE) {
+                clearTimeout(timeoutId);
                 // Hide loading indicator
                 document.getElementById('loading-container').style.display = 'none';
                 
@@ -614,6 +674,31 @@
         modalImage.style.transform = `scale(${currentZoom})`;
     }
 
+    let currentFrameSize = 220; // Default frame size
+
+    function adjustFrameSize(action) {
+        const frames = document.querySelectorAll('.image-frame');
+        const sizeChange = 20; // Amount to change size by
+        
+        if (action === 'increase') {
+            currentFrameSize = Math.min(currentFrameSize + sizeChange, 400);
+        } else {
+            currentFrameSize = Math.max(currentFrameSize - sizeChange, 120);
+        }
+        
+        frames.forEach(frame => {
+            frame.style.width = `${currentFrameSize}px`;
+            frame.style.height = `${currentFrameSize}px`;
+            
+            // Adjust image size within frame
+            const img = frame.querySelector('img');
+            if (img) {
+                img.style.maxWidth = `${currentFrameSize - 20}px`;
+                img.style.maxHeight = `${currentFrameSize - 20}px`;
+            }
+        });
+    }
+
     function displayImages(images) {
         const imageContainer = document.getElementById('image-container');
         imageContainer.innerHTML = '';
@@ -624,8 +709,12 @@
         const currentUrlTitle = document.getElementById('current-url-title');
         
         // Update and show the title with link
-        currentUrlTitle.innerHTML = `<a href="${images.url}" target="_blank">${images.url || 'Images'}</a>`;
-        currentUrlTitle.style.display = 'block';
+        currentUrlTitle.querySelector('a').href = images.url;
+        currentUrlTitle.querySelector('a').textContent = images.url || 'Images';
+        currentUrlTitle.style.display = 'flex';
+        
+        // Show the size controls
+        currentUrlTitle.querySelector('.size-controls').style.display = 'flex';
         
         // Show the grab more button
         grabMoreButton.style.display = 'block';
@@ -638,9 +727,12 @@
         imageList.forEach(imageData => {
             const frame = document.createElement('div');
             frame.className = 'image-frame';
+            frame.style.width = `${currentFrameSize}px`;
+            frame.style.height = `${currentFrameSize}px`;
             
             const img = document.createElement('img');
-            img.width = 200;
+            img.style.maxWidth = `${currentFrameSize - 20}px`;
+            img.style.maxHeight = `${currentFrameSize - 20}px`;
             img.src = imageData.imageUrl;
             img.alt = 'Image';
             
@@ -648,6 +740,9 @@
             img.addEventListener('click', () => {
                 modalImage.src = imageData.imageUrl;
                 modalLink.href = imageData.imageUrl;
+                // Extract and display image name, removing query parameters
+                const imageName = imageData.imageUrl.split('/').pop().split('?')[0];
+                document.getElementById('modal-image-name').textContent = imageName;
                 modal.style.display = 'block';
                 resetZoom();
             });
@@ -705,6 +800,8 @@
         document.getElementById('search-form').style.display = 'block';
         // Hide the title and button
         document.getElementById('current-url-title').style.display = 'none';
+        // Hide the size controls
+        document.getElementById('current-url-title').querySelector('.size-controls').style.display = 'none';
         this.style.display = 'none';
         // Clear the image container
         document.getElementById('image-container').innerHTML = '';
