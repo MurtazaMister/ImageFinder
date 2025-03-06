@@ -40,7 +40,7 @@ function checkRecursiveLevel() {
     const input = document.getElementById('go-deep-input');
     const warning = document.getElementById('level-warning');
     
-    if (input.value > 2) {
+    if (input.value > 1) {
         warning.style.display = 'block';
     } else {
         warning.style.display = 'none';
@@ -84,9 +84,7 @@ function apiCallBack(xhr, callback) {
  */
 function enableForm() {
     const form = document.getElementById('search-form');
-    const submitButton = form.querySelector('.search-button');
     form.style.display = 'block';
-    submitButton.disabled = false;
     document.getElementById('current-url-title').style.display = 'none';
     document.getElementById('grab-more-button').style.display = 'none';
     document.getElementById('loading-container').style.display = 'none';
@@ -245,9 +243,6 @@ function makeApiCall(url, method, obj, callback) {
         }
     };
     
-    const submitButton = document.querySelector('.search-button');
-    submitButton.disabled = true;
-    
     xhr.send(obj ? obj instanceof FormData || obj.constructor == String ? obj : JSON.stringify(obj) : null);
     
     window.responseMap = responseMap;
@@ -323,9 +318,6 @@ function displayImages(images) {
     document.getElementById('search-form').style.display = 'none';
     document.getElementById('loading-container').style.display = 'none';
     document.getElementById('grab-more-button').style.display = 'none';
-    
-    const submitButton = document.querySelector('.search-button');
-    submitButton.disabled = false;
     
     const grabMoreButton = document.getElementById('grab-more-button');
     const currentUrlTitle = document.getElementById('current-url-title');

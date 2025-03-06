@@ -16,8 +16,6 @@ public class LevelImagePair {
         images = new LinkedHashSet<>();
     }
 
-
-
     public void add(Image image) {
         images.add(image);
     }

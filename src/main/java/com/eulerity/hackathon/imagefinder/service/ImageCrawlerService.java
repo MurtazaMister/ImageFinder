@@ -142,7 +142,7 @@ public class ImageCrawlerService {
                 log.error("Failed to process: {}\nStatus code: {}\nException: {}", url, e.getStatusCode(), e.getMessage());
                 // Exponential backoff on rejected requests
                 synchronized (lock) {
-                    adaptiveDelay = (long)Math.min(maxDelay, (double)adaptiveDelay*2);
+                    adaptiveDelay = (long)Math.min(maxDelay, (double)adaptiveDelay*4);
                 }
             } catch (Exception e) {
                 log.error("Failed to process: {}\nException: {}", url, e.getMessage());
