@@ -11,6 +11,10 @@ import java.net.URL;
 @Slf4j
 public class UrlUtilities {
 
+    public static String[] imageFormats = {
+            ".jpg", ".jpeg", ".png", ".gif", ".webp", ".svg", ".bmp", ".apng", ".avif", ".ico"
+    };
+
     /**
      * To make URLs consistent among different scenarios
      * @param url URL to be normalized
@@ -131,6 +135,13 @@ public class UrlUtilities {
         catch (Exception e) {
             return false;
         }
+    }
+
+    public static boolean isImageUrl(String url) {
+        for(String ext : imageFormats){
+            if(url.contains(ext)) return true;
+        }
+        return false;
     }
 
 }

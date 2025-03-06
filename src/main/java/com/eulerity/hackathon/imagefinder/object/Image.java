@@ -28,13 +28,13 @@ public class Image {
      */
     public static Image processImage(String imageUrl) {
         Image.Type imageObjectType;
-        if(imageUrl.contains("favicon")){
+        if(imageUrl.toLowerCase().contains("favicon") || imageUrl.toLowerCase().contains(".ico")){
             imageObjectType = Image.Type.FAVICON;
         }
-        else if(imageUrl.contains("logo")){
+        else if(imageUrl.toLowerCase().contains("logo")){
             imageObjectType = Image.Type.LOGO;
         }
-        else if(imageUrl.contains(".gif")){
+        else if(imageUrl.toLowerCase().contains(".gif")){
             imageObjectType = Image.Type.GIF;
         }
         else{

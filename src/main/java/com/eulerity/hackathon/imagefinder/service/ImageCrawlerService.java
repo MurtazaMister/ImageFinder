@@ -192,10 +192,11 @@ public class ImageCrawlerService {
      */
     public void crawlImages(Document document, String baseUrl){
         Elements images = document.select("img[src]");
+        Elements favicons = document.select("link[href]");
 
         for(Element image : images){
             String imageUrl = image.attr("src");
-            if(imageUrl.startsWith("data")) continue;
+            if(imageUrl.startsWith("data") || !UrlUtilities.isImageUrl(imageUrl)) continue;
             try {
                 imageUrl = UrlUtilities.resolveUrl(baseUrl, imageUrl, false);
                 if(imageUrl != null) {
@@ -204,6 +205,20 @@ public class ImageCrawlerService {
             }
             catch(Exception e) {
                 log.error("Failed to resolve image url: {} | {}\nException: {}", baseUrl, imageUrl, e.getMessage());
+            }
+        }
+
+        for(Element favicon : favicons){
+            String faviconUrl = favicon.attr("href");
+            if(!UrlUtilities.isImageUrl(faviconUrl)) continue;
+            try {
+                faviconUrl = UrlUtilities.resolveUrl(baseUrl, faviconUrl, false);
+                if(faviconUrl != null) {
+                    imageDb.get(baseUrl).add(Image.processImage(faviconUrl));
+                }
+            }
+            catch(Exception e) {
+                log.error("Failed to resolve image url: {} | {}\nException: {}", baseUrl, faviconUrl, e.getMessage());
             }
         }
     }

@@ -104,7 +104,12 @@ function makeApiCall(url, method, obj, callback) {
     let xhr = new XMLHttpRequest();
     let responseMap = {};
     let timeoutId;
-    let accumulatedResponse = ''; // Buffer for accumulating partial responses
+    let accumulatedResponse = '';
+    
+    // Special category sets to avoid duplicates
+    let logoSet = new Set();
+    let gifSet = new Set();
+    let faviconSet = new Set();
     
     function resetTimeout() {
         if (timeoutId) {
@@ -114,6 +119,66 @@ function makeApiCall(url, method, obj, callback) {
             alert('Request timed out after 17.5 seconds of inactivity. The server took too long to respond.');
             enableForm();
         }, 17500);
+    }
+    
+    function processSpecialImages(data) {
+        // Create special category containers if they don't exist
+        if (!responseMap['logos']) {
+            responseMap['logos'] = {
+                level: 'Logos',
+                images: {},
+                url: 'Logos'
+            };
+        }
+        if (!responseMap['gifs']) {
+            responseMap['gifs'] = {
+                level: 'GIFs',
+                images: {},
+                url: 'GIFs'
+            };
+        }
+        if (!responseMap['favicons']) {
+            responseMap['favicons'] = {
+                level: 'Favicons',
+                images: {},
+                url: 'Favicons'
+            };
+        }
+
+        // Process each URL's images
+        Object.entries(data).forEach(([url, urlData]) => {
+            if (urlData.images) {
+                Object.entries(urlData.images).forEach(([key, imgData]) => {
+                    const imageUrl = imgData.imageUrl;
+                    
+                    // Process based on type
+                    if (imgData.type === 'LOGO') {
+                        if (!logoSet.has(imageUrl)) {
+                            logoSet.add(imageUrl);
+                            responseMap['logos'].images[imageUrl] = imgData;
+                        }
+                        delete urlData.images[key];
+                    } else if (imgData.type === 'GIF') {
+                        if (!gifSet.has(imageUrl)) {
+                            gifSet.add(imageUrl);
+                            responseMap['gifs'].images[imageUrl] = imgData;
+                        }
+                        delete urlData.images[key];
+                    } else if (imgData.type === 'FAVICON') {
+                        if (!faviconSet.has(imageUrl)) {
+                            faviconSet.add(imageUrl);
+                            responseMap['favicons'].images[imageUrl] = imgData;
+                        }
+                        delete urlData.images[key];
+                    }
+                });
+                
+                // Only keep the URL data if it has remaining images
+                if (Object.keys(urlData.images).length > 0) {
+                    responseMap[url] = urlData;
+                }
+            }
+        });
     }
     
     document.getElementById('loading-container').style.display = 'block';
@@ -130,22 +195,20 @@ function makeApiCall(url, method, obj, callback) {
     xhr.onreadystatechange = function() {
         if (xhr.readyState === XMLHttpRequest.LOADING) {
             try {
-                // Get only the new data since last response
                 const newData = xhr.responseText.substring(accumulatedResponse.length);
                 accumulatedResponse = xhr.responseText;
 
                 if (newData.trim()) {
-                    // Split by newline and process each complete chunk
                     const chunks = newData.split('\n');
                     chunks.forEach(chunk => {
                         if (chunk.trim()) {
                             try {
                                 const data = JSON.parse(chunk);
-                                responseMap = { ...responseMap, ...data };
+                                processSpecialImages(data);
                                 updateList(responseMap);
                                 resetTimeout();
                             } catch (e) {
-                                console.log('Incomplete chunk, waiting for more data');
+                                // Skip incomplete chunks
                             }
                         }
                     });
@@ -380,23 +443,45 @@ function updateList(response) {
     const sidebar = document.querySelector('.sidebar');
     sidebar.innerHTML = '';
     
+    const specialLevels = ['Logos', 'GIFs', 'Favicons'];
     const levels = {};
+    
+    // First process special categories
+    specialLevels.forEach(level => {
+        const key = level.toLowerCase();
+        if (response[key] && response[key].images && Object.keys(response[key].images).length > 0) {
+            levels[level] = [{
+                url: level,
+                images: response[key].images
+            }];
+        }
+    });
+    
+    // Then process numbered levels
     for (const url in response) {
-        if (!response[url].images || Object.keys(response[url].images).length === 0) {
-            continue;
+        if (!specialLevels.map(l => l.toLowerCase()).includes(url)) {
+            if (!response[url].images || Object.keys(response[url].images).length === 0) {
+                continue;
+            }
+            
+            const level = response[url].level;
+            if (!levels[level]) {
+                levels[level] = [];
+            }
+            levels[level].push({
+                url: url,
+                images: response[url].images
+            });
         }
-        
-        const level = response[url].level;
-        if (!levels[level]) {
-            levels[level] = [];
-        }
-        levels[level].push({
-            url: url,
-            images: response[url].images
-        });
     }
     
-    Object.keys(levels).sort((a, b) => a - b).forEach(level => {
+    // Sort and create sections - only include special levels that have images
+    const activeSpecialLevels = specialLevels.filter(level => levels[level]);
+    const allLevels = [...activeSpecialLevels, ...Object.keys(levels).filter(l => !specialLevels.includes(l)).sort((a, b) => a - b)];
+    
+    allLevels.forEach(level => {
+        if (!levels[level]) return;
+        
         const levelSection = document.createElement('div');
         levelSection.className = 'level-section';
         
@@ -404,7 +489,7 @@ function updateList(response) {
         levelTitle.className = 'level-title';
         
         const levelText = document.createElement('span');
-        levelText.textContent = `Level ${level}`;
+        levelText.textContent = specialLevels.includes(level) ? level : `Level ${level}`;
         levelTitle.appendChild(levelText);
         
         const count = document.createElement('span');
@@ -433,6 +518,13 @@ function updateList(response) {
             const categoryTitle = document.createElement('h3');
             categoryTitle.textContent = category.url;
             categorySection.appendChild(categoryTitle);
+            
+            // Add image count bubble
+            const imageCount = document.createElement('span');
+            imageCount.className = 'image-count';
+            const numImages = Object.keys(category.images).length;
+            imageCount.textContent = numImages;
+            categorySection.appendChild(imageCount);
             
             categorySection.addEventListener('click', () => {
                 document.querySelectorAll('.category-section').forEach(cat => {

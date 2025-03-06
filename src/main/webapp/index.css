@@ -148,6 +148,7 @@ body {
     cursor: pointer;
     transition: background-color 0.2s;
     display: none;
+    position: relative;
 }
 
 .level-section.expanded .category-section {
@@ -175,6 +176,24 @@ body {
 
 .category-section.active h3 {
     color: white;
+}
+
+.category-section .image-count {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: #ff9800;
+    color: white;
+    border-radius: 12px;
+    padding: 2px 8px;
+    font-size: 0.8em;
+    min-width: 20px;
+    text-align: center;
+}
+
+.category-section.active .image-count {
+    background: white;
+    color: #ff9800;
 }
 
 .level-section::-webkit-scrollbar {
