@@ -195,7 +195,7 @@ public class ImageCrawlerService {
 
         for(Element image : images){
             String imageUrl = image.attr("src");
-            if(imageUrl.startsWith("data") || imageUrl.contains("svg")) continue;
+            if(imageUrl.startsWith("data")) continue;
             try {
                 imageUrl = UrlUtilities.resolveUrl(baseUrl, imageUrl, false);
                 if(imageUrl != null) {

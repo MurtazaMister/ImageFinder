@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Photo<span style="font-weight: bold; color: orange;">port</span></title>
+	<title>PhotoPort</span></title>
 	<style>
 		body {
 			font-family: Arial, sans-serif;
@@ -615,12 +615,14 @@
                                     resetTimeout();
                                 } catch (e) {
                                     console.error('Error parsing chunk:', e);
+                                    enableForm(); // Re-enable form on parsing error
                                 }
                             }
                         });
                     }
                 } catch (error) {
                     console.error('Error processing response:', error);
+                    enableForm(); // Re-enable form on processing error
                 }
             } else if (xhr.readyState === XMLHttpRequest.DONE) {
                 clearTimeout(timeoutId);
@@ -703,8 +705,15 @@
         const imageContainer = document.getElementById('image-container');
         imageContainer.innerHTML = '';
         
-        // Hide the form and show the grab more button and title
+        // Hide all elements first
         document.getElementById('search-form').style.display = 'none';
+        document.getElementById('loading-container').style.display = 'none';
+        document.getElementById('grab-more-button').style.display = 'none';
+        
+        // Re-enable the submit button
+        const submitButton = document.querySelector('.search-button');
+        submitButton.disabled = false;
+        
         const grabMoreButton = document.getElementById('grab-more-button');
         const currentUrlTitle = document.getElementById('current-url-title');
         
@@ -750,10 +759,6 @@
             frame.appendChild(img);
             imageContainer.appendChild(frame);
         });
-
-        // Re-enable the submit button
-        const submitButton = document.querySelector('.search-button');
-        submitButton.disabled = false;
     }
 
     // Modal close handler
@@ -796,13 +801,14 @@
 
     // Add event listener for the grab more button
     document.getElementById('grab-more-button').addEventListener('click', function() {
+        // Hide all elements first
+        document.getElementById('grab-more-button').style.display = 'none';
+        document.getElementById('current-url-title').style.display = 'none';
+        document.getElementById('loading-container').style.display = 'none';
+        
         // Show the form
         document.getElementById('search-form').style.display = 'block';
-        // Hide the title and button
-        document.getElementById('current-url-title').style.display = 'none';
-        // Hide the size controls
-        document.getElementById('current-url-title').querySelector('.size-controls').style.display = 'none';
-        this.style.display = 'none';
+        
         // Clear the image container
         document.getElementById('image-container').innerHTML = '';
         
@@ -937,13 +943,12 @@
         const recursiveLevels = recursiveLevelsInput.value || '0';
 
         if (isValidURL(url)) {
-            // Disable the submit button
-            const submitButton = document.querySelector('.search-button');
-            submitButton.disabled = true;
-            
-            // Hide form and grab more button, show loading
+            // Hide all elements first
             document.getElementById('search-form').style.display = 'none';
             document.getElementById('grab-more-button').style.display = 'none';
+            document.getElementById('current-url-title').style.display = 'none';
+            
+            // Show loading
             document.getElementById('loading-container').style.display = 'block';
             
             let urlWithParams = `/main?url=${encodeURIComponent(url)}&recursive=${recursive}&recursiveLevels=${recursiveLevels}`;
