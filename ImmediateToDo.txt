@@ -1,1 +1,0 @@
-- allow .svg but not svg??

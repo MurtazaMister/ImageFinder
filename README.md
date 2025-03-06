@@ -1,66 +1,140 @@
-# Eulerity Hackathon Challenge
-Congratulations on making it to this stage of Eulerity's interview process! In this folder is a project for a partially built web application whose goal is to crawl a provided URL and pick out the images from it. This README will provide more information about the goals of the project, its structure, and setup and submission instructions.
+# PhotoPort - Advanced Web Image Crawler
 
-## ImageFinder Goal
-The goal of this task is to perform a web crawl on a URL string provided by the user. From the crawl, you will need to parse out all of the images on that web page and return a JSON array of strings that represent the URLs of all images on the page. [Jsoup](https://jsoup.org/) is a great basic library for crawling and is already included as a maven dependency in this project, however you are welcome to use whatever library you would like.
+PhotoPort is a sophisticated web application that crawls websites to find and categorize images. Built for the Eulerity Hackathon Challenge, it offers a <b>powerful backend</b> and <b>user-friendly interface</b> for discovering images on the web.
 
-### Required Functionality
-We expect your submission to be able to achieve the following goals:
-- Build a web crawler that can find all images on the web page(s) that it crawls.
-- Crawl sub-pages to find more images.
-- Implement multi-threading so that the crawl can be performed on multiple sub-pages at a time.
-- Keep your crawl within the same domain as the input URL.
-- Avoid re-crawling any pages that have already been visited.
+![interactive-frontend](./src/main/resources/screenshots/interactive-frontend.png)
+![interactive-frontend](./src/main/resources/screenshots/interactive-frontend-2.png)
 
-### Extra Functionality
-No individual point below is explicitly required, but we recommend trying to achieve some extra goals as well, such as the following:
-- Make your crawler "friendly" - try not to get banned from the site by performing too many crawls.
-- Try to detect what images might be considered logos.
-- Show off your front-end dev skills with Javascript, HTML, and/or CSS to make the site look more engaging.
-- Any other way you feel you can show off your strengths as a developer 😊
+## Key Features
 
-**PLEASE do not send us a submission with only a basic JSoup crawl and only a couple lines of code.** This is your chance to prove what you could contribute to our team.
+### Intelligent Crawling
+- **Multi-threaded Crawling**: Efficiently processes multiple pages simultaneously
 
-You have one week to work on the submission from the time when you receive it. To submit you assignment, zip up your project (`imagefinder.zip`) and email it back to me. **Please include a list of URLs that you used to test in your submissions.** You should place them in the attached `test-links.txt` file found in the root of this project.
+![threads](./src/main/resources/screenshots/threads.png)
 
-## Structure
-The ImageFinder servlet is found in `src/main/java/com/eulerity/hackathon/imagefinder/ImageFinder.java`. This is the only provided Java class. Feel free to add more classes or packages as you see fit. 
+- **Recursive Crawling**: Optional deep crawling with configurable levels
+- **Adaptive Rate Limiting**: Implements friendly crawling practices to avoid site bans
 
-The main landing page for this project can be found in `src/main/webapp/index.html`. This page contains more instructions and serves as the starting page for the web application. You may edit this page as much as it suits you, and/or add other pages. 
+![adaptive-rate-limiting-2](./src/main/resources/screenshots/adaptive-rate-limiting.png)
+![adaptive-rate-limiting-2](./src/main/resources/screenshots/adaptive-rate-limiting-2.png)
 
-Finally, in the root directory of this project, you will find the `pom.xml`. This contains the project configuration details used by maven to build the project. If you want/need to use outside dependencies, you should add them to this file.
 
-## Running the Project
-Here we will detail how to setup and run this project so you may get started, as well as the requirements needed to do so.
+- **Domain-Safe**: Stays within the same domain as the input URL
+- **Duplicate Prevention**: Avoids re-crawling visited pages
+- **Exponential Backoff**: In case the webserver starts rejecting requests, exponentially increase the delays in which the requests to crawl are made.
 
-### Requirements
-Before beginning, make sure you have the following installed and ready to use
+![exponential-backoff](./src/main/resources/screenshots/exponential-backoff.png)
+
+### Performance & Reliability
+- **Streaming Response**: Real-time image processing
+
+![dynamic-loading](./src/main/resources/screenshots/dynamic-loading.gif)
+
+- **Timeout Handling**: Graceful handling of slow responses
+- **Error Recovery**: Automatic form reset on errors
+- **Progress Tracking**: Visual feedback during crawling
+
+### Smart Categorization
+- **Automatic Classification**: Automatically categorizes images into:
+  - Logos
+  - GIFs
+  - Favicons
+  - SVGs
+  - Regular images
+
+![special-images-classification](./src/main/resources/screenshots/special-images-classification.png)
+
+### User Interface
+- **Modern Design**: Clean and intuitive interface
+- **Real-time Updates**: Live streaming of found images
+- **Interactive Sidebar**: 
+  - Hierarchical view of crawled pages
+  - Image count indicators
+  - Expandable/collapsible sections
+
+![bubbles](./src/main/resources/screenshots/bubbles.png)
+
+- **Image Management**:
+  - Adjustable image frame sizes
+
+![adjustment](./src/main/resources/screenshots/adjustment.gif)
+
+  - Image preview with tooltips
+  - Modal view for detailed inspection
+  - Zoom controls for detailed viewing
+  - Drag support for zoomed images
+
+## Technical Stack
+
+- **Frontend**:
+  - HTML5
+  - CSS3 with modern styling
+  - Vanilla JavaScript with modern features
+- **Backend**:
+  - Java 8
+  - Jsoup for web crawling
+  - Jetty server
+  - Maven for build management
+
+## Notes
+
+- The crawler respects website boundaries and implements rate limiting
+- Image categorization is based on file types and content analysis
+- All images are displayed with proper attribution and source links
+
+## Getting Started
+
+### Prerequisites
+- Java 8 (exact version required)
 - Maven 3.5 or higher
-- Java 8
-  - Exact version, **NOT** Java 9+ - the build will fail with a newer version of Java
 
-### Setup
-To start, open a terminal window and navigate to wherever you unzipped to the root directory `imagefinder`. To build the project, run the command:
+### Installation
 
->`mvn package`
+1. Build the project:
+```bash
+mvn package
+```
 
-If all goes well you should see some lines that end with "BUILD SUCCESS". When you build your project, maven should build it in the `target` directory. To clear this, you may run the command:
+2. Run the application:
+```bash
+mvn clean test package jetty:run
+```
 
->`mvn clean`
+3. Open your browser and navigate to:
+```
+http://localhost:8080
+```
 
-To run the project, use the following command to start the server:
+### Usage
 
->`mvn clean test package jetty:run`
+1. Enter a URL in the search bar
+2. (Optional) Enable advanced options:
+   - Toggle recursive crawling
+   - Set crawl depth level
+3. Click "Grab Images" to start crawling
+4. Use the sidebar to navigate through found images
+5. Click on images to view them in detail
+6. Use the "Grab More Images" button to start a new search
 
-You should see a line at the bottom that says "Started Jetty Server". Now, if you enter `localhost:8080` into your browser, you should see the `index.html` welcome page! If all has gone well to this point, you're ready to begin!
+## File Structure
 
-## Submission
-When you are finished working on the project, before zipping up and emailing back your submission, **PLEASE RUN ONE LAST `mvn clean` COMMAND TO REMOVE ANY UNNECESSARY FILES FROM YOUR SUBMISSION**. Please also make sure to add the URLs you used to test your project to the `test-links.txt` file. After doing these things, you may zip up the root directory (`imagefinder`) and email it back to us.
+### Backend
+- [`src/main/java/com/eulerity/hackathon/imagefinder/`](./src/main/java/com/eulerity/hackathon/imagefinder/)
+  - [`ImageFinder.java`](./src/main/java/com/eulerity/hackathon/imagefinder/ImageFinder.java): Main servlet handling image crawling requests
+  - [`service/`](./src/main/java/com/eulerity/hackathon/imagefinder/service): Service layer for image crawling logic
+  - [`object/`](./src/main/java/com/eulerity/hackathon/imagefinder/object): Contains classes for storage
+  - [`util/`](./src/main/java/com/eulerity/hackathon/imagefinder/util): Contains utility classes and helpers
+  - [`config/`](./src/main/java/com/eulerity/hackathon/imagefinder/config): Contains configuration files
 
-## Final Notes
-- If you feel you need more time to work, you are free to ask for it.
-- If you are having any trouble, especially with the setup, please reach out and we will try to answer as soon as we can.
-- The ideas listed above on how to expand the project are great starting points, but feel free to add in your own ideas as well.
-- Try to follow some good-practice principles when working on your code, such as meaningful and clean variable/method names and other good coding practices.
-- The code we have provided is to allow you to hit the ground running. You are free to use whatever web service you would like (as long as you use Java 8 and it is runnable from the command line).
-- We look forward to seeing what you can do, so good luck and have fun 😊
+### Frontend
+- [`src/main/webapp/`](./src/main/webapp)
+  - [`index.html`](./src/main/webapp/index.html): Main application interface
+  - [`index.css`](./src/main/webapp/index.css): Styles for UI
+  - [`index.js`](./src/main/webapp/index.js): Client-side functionality
+  - [`favicon.ico`](./src/main/webapp/favicon.ico): Browser tab icon
+
+## License
+
+This project is part of the Eulerity Hackathon Challenge.
+
+---
