@@ -1,6 +1,6 @@
 # PhotoPort - Advanced Web Image Crawler
 
-PhotoPort is a sophisticated web application that crawls websites to find and categorize images. Built for the Eulerity Hackathon Challenge, it offers a <b>powerful backend</b> and <b>user-friendly interface</b> for discovering images on the web.
+PhotoPort is a sophisticated web application that crawls websites to find and categorize images. Built as a Hackathon Challenge, it offers a <b>powerful backend</b> and <b>user-friendly interface</b> for discovering images on the web.
 
 ![interactive-frontend](./src/main/resources/screenshots/interactive-frontend.png)
 ![interactive-frontend](./src/main/resources/screenshots/interactive-frontend-2.png)
@@ -135,9 +135,5 @@ http://localhost:8080
   - [`index.html`](./src/main/webapp/index.html): Main application interface
   - [`index.css`](./src/main/webapp/index.css): Styles for UI
   - [`index.js`](./src/main/webapp/index.js): Client-side functionality
-
-## License
-
-This project is part of the Eulerity Hackathon Challenge.
 
 ---
